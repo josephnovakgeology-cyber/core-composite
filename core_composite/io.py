@@ -415,3 +415,103 @@ def compile_hole(directory_path, site_hole, output_filename=None):
     print(f"Total Measurements: {len(master_df)}")
     
     return master_df
+
+def map_subsamples_to_mcd(builder, csv_path, output_filename="Mapped_Subsamples.csv"):
+    """
+    Takes an external CSV of subsample data (e.g., benthic oxygen isotopes) and 
+    calculates their Composite Depth (MCD) using the current affine/splice model.
+    """
+
+    print(f"\nMapping Subsamples to MCD from {csv_path}")
+    try:
+        df = pd.read_csv(csv_path)
+    except Exception as e:
+        print(f"Error reading file: {e}")
+        return
+        
+    # Fuzzy match columns (case insensitive)
+    hole_col = next((c for c in df.columns if 'hole' in c.lower()), None)
+    core_col = next((c for c in df.columns if 'core' in c.lower()), None)
+    sec_col = next((c for c in df.columns if 'sec' in c.lower() and 'sed' not in c.lower()), None)
+    
+    # Look for the original depth column (ignore any old MCD columns if they exist)
+    depth_col = next((c for c in df.columns if 'depth' in c.lower() and 'mcd' not in c.lower() and 'comp' not in c.lower()), None)
+    
+    if not hole_col or not core_col or not depth_col:
+        print("Error: Subsample CSV must contain at least 'Hole', 'Core', and 'Depth' (mbsf) columns.")
+        return
+        
+    mcd_values = []
+    
+    for idx, row in df.iterrows():
+        raw_hole = str(row[hole_col]).strip()
+        raw_core = str(row[core_col]).strip()
+        raw_depth = float(row[depth_col]) if not pd.isna(row[depth_col]) else np.nan
+        
+        if pd.isna(raw_depth):
+            mcd_values.append(np.nan)
+            continue
+            
+        # Match the Hole
+        target_hole = None
+        for h_name, h_obj in builder.holes.items():
+            if h_name.endswith(raw_hole) or raw_hole.endswith(h_name):
+                target_hole = h_obj
+                break
+        if not target_hole:
+            mcd_values.append(np.nan)
+            continue
+            
+        # Match the Core (ignoring letters like 'H' or 'X')
+        target_core = None
+        
+        # If pandas added a '.0', chop it off before doing the regex
+        # regex = regular expression pattern, the search pattern used for matching
+        if raw_core.endswith('.0'):
+            raw_core = raw_core[:-2]
+            
+        core_num_csv = re.sub(r'\D', '', raw_core)
+        for c_obj in target_hole.cores:
+            core_num_obj = re.sub(r'\D', '', str(c_obj.core_id))
+            if core_num_obj == core_num_csv:
+                target_core = c_obj
+                break
+        if not target_core:
+            mcd_values.append(np.nan)
+            continue
+            
+        # Match the Section 
+        target_sec = None
+        if sec_col and not pd.isna(row[sec_col]):
+            raw_sec = str(row[sec_col]).strip()
+            for s_obj in target_core.sections:
+                if str(s_obj.section_id) == raw_sec:
+                    target_sec = s_obj
+                    break
+        
+        # If no Section column is provided in the CSV, find which section's depths contain the sample
+        if not target_sec:
+            for s_obj in target_core.sections:
+                if s_obj.drilled_top <= raw_depth <= s_obj.drilled_bottom:
+                    target_sec = s_obj
+                    break
+            # Just use the core's affine shift if it fell in a gap
+            if not target_sec and target_core.sections:
+                target_sec = target_core.sections[0]
+                
+        if not target_sec:
+            mcd_values.append(np.nan)
+            continue
+            
+        # Calculate the precise MCD
+        st = getattr(target_sec, 'stretch_factor', 1.0)
+        mcd = (raw_depth - target_sec.drilled_top) * st + target_sec.drilled_top + target_sec.affine_shift
+        mcd_values.append(mcd)
+        
+    # Append the new data and save
+    df['Depth (mcd)'] = mcd_values
+    df.to_csv(output_filename, index=False)
+    
+    success_count = len([m for m in mcd_values if not pd.isna(m)])
+    print(f" Successfully mapped {success_count} samples to the Composite Depth scale")
+    print(f" Saved to: {output_filename}")
