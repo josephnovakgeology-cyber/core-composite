@@ -4,7 +4,7 @@ Created on Fri May  1 06:47:58 2026
 
 @author: joseph novak
 
-CompositeBuilder algorithm -> note that the heavy math is in alignment.py
+CompositeBuilder algorithm and code that manages the associated logic.
 """
 
 import pandas as pd
