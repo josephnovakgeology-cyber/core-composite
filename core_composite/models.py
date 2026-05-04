@@ -229,54 +229,6 @@ class Hole:
         self.hole_name = hole_name
         self.cores = []
 
-    def load_from_multiple_files(self, odp_summary_csv, hole_data_files, proxy_keywords=['density']):
-        summary_df = pd.read_csv(odp_summary_csv)
-        
-        """
-        This function loads DSDP / ODP / IODP physical properties data from Janus / LIMS into the Hole, Core, 
-        and Section classes in a coherent way. I so very strongly advise you do not mess with this.
-        """
-        
-        # Remove whitespace from summary headers
-        # Fix for loading problems
-        summary_df.rename(columns=lambda x: str(x).strip(), inplace=True)
-        
-        hole_letter = self.hole_name[-1].upper()
-        hole_summary = summary_df[summary_df['H'].astype(str).str.strip().str.upper() == hole_letter]
-        
-        combined_data = pd.DataFrame()
-        
-        for file in hole_data_files:
-            df = pd.read_csv(file)
-            
-            df.rename(columns=lambda x: str(x).strip(), inplace=True)
-            
-            depth_col = next((c for c in df.columns if ('mbsf' in c.lower() or 'depth' in c.lower() or 'csf' in c.lower()) and 'mcd' not in c.lower()), None)
-            if depth_col: df.rename(columns={depth_col: 'Depth'}, inplace=True)
-            
-            core_col = next((c for c in df.columns if c.lower() in ['core', 'cor']), None)
-            if core_col: df.rename(columns={core_col: 'Core'}, inplace=True)
-            
-            combined_data = pd.concat([combined_data, df], ignore_index=True)
-            
-        if not combined_data.empty and 'Depth' in combined_data.columns and 'Core' in combined_data.columns:
-            combined_data.sort_values(by=['Core', 'Depth'], inplace=True)
-            combined_data['Core_Clean'] = combined_data['Core'].astype(str).str.extract(r'(\d+)')[0]
-            
-        for _, row in hole_summary.iterrows():
-            core_num = str(row['Cor']).strip().split('.')[0]
-            core_type = str(row['T']).strip() if str(row['T']).lower() != 'nan' else ''
-            cid = f"{core_num}{core_type}" # changed variable name from Core ID in earlier version
-            core_mask = combined_data['Core_Clean'] == core_num
-            core_data_slice = combined_data[core_mask]
-            if not core_data_slice.empty:
-                drilled_top = float(row['Top(mbsf)'])
-                drilled_bottom = drilled_top + float(row['Cored(m)'])
-                new_core = Core(self.hole_name, cid, core_data_slice, drilled_top, drilled_bottom, proxy_keywords)
-                if new_core.active_proxies:
-                    new_core.compress_depth_and_split(chunk_size=1.0)
-                    self.cores.append(new_core)
-
     def get_positioned_data(self):
         """
         Applies compression, affine shifts, and stretch factor calculations in the Hole class.
