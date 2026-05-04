@@ -419,3 +419,44 @@ def map_subsamples_to_mcd(builder, csv_path, output_filename="Mapped_Subsamples.
     success_count = len([m for m in mcd_values if not pd.isna(m)])
     print(f" Successfully mapped {success_count} samples to the Composite Depth scale")
     print(f" Saved to: {output_filename}")
+    
+def export_project_data(builder_obj, output_prefix="Core_Composite_Master"):
+    """
+    Extracts the final alignment data from the CompositeBuilder and exports 
+    the Affine Table (shifts/stretches) and the Master Splice Record to CSVs.
+    """
+    print(f"\nExporting project data with prefix '{output_prefix}'...")
+    
+    # 1. Build and Export the Affine Table
+    affine_data = []
+    for h_name, hole in builder_obj.holes.items():
+        for core in hole.cores:
+            for sec in core.sections:
+                affine_data.append({
+                    'Hole': h_name,
+                    'Core': core.core_id,
+                    'Section': sec.section_id,
+                    'Top_Depth_Drilled (mbsf)': sec.drilled_top,
+                    'Bottom_Depth_Drilled (mbsf)': sec.drilled_bottom,
+                    'Affine_Shift (m)': getattr(sec, 'affine_shift', 0.0),
+                    'Stretch_Factor': getattr(sec, 'stretch_factor', 1.0),
+                    'On_Splice': getattr(sec, 'is_locked', False)
+                })
+                
+    if affine_data:
+        affine_df = pd.DataFrame(affine_data)
+        affine_filename = f"{output_prefix}_Affine_Table.csv"
+        affine_df.to_csv(affine_filename, index=False)
+        print(f"  -> Saved Affine Table: {affine_filename}")
+        
+    # 2. Export the Splice Record
+    if hasattr(builder_obj, 'splice') and builder_obj.splice is not None:
+        if builder_obj.splice.intervals:
+            splice_df = pd.DataFrame(builder_obj.splice.intervals)
+            splice_filename = f"{output_prefix}_Splice_Record.csv"
+            splice_df.to_csv(splice_filename, index=False)
+            print(f"  -> Saved Master Splice Record: {splice_filename}")
+        else:
+            print("  -> No splice intervals found to export.")
+            
+    print("Export complete.")
