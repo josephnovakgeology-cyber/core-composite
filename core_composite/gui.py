@@ -381,7 +381,7 @@ class Phase3ReviewGUI:
         export_project_data(self.builder, self.active_holes, self.all_proxies)
         
 class SpliceBuilderGUI:
-    def __init__(self, builder, mudline_hole, proxy='Density'):
+    def __init__(self, builder, mudline_hole, proxy= None):
         """
         The GUI for building new splices / composite sections.
         """
@@ -411,7 +411,7 @@ class SpliceBuilderGUI:
                 
         self.fig, self.ax = plt.subplots(figsize=(15, 8))
         self.fig.subplots_adjust(left=0.15, bottom=0.25) # Leaves room for buttons
-        self.fig.canvas.manager.set_window_title('V10 Phase 1: Splice Builder')
+        self.fig.canvas.manager.set_window_title('Splice Builder')
         
         ax_radio_proxy = plt.axes([0.02, 0.65, 0.1, 0.15])
         ax_radio_proxy.set_title('Proxy', fontweight='bold')
@@ -693,5 +693,5 @@ class SpliceBuilderGUI:
         """
         Closes the GUI window to allow the main script to proceed align off-splice core sections.
         """
-        print("Finalizing Composite... Proceeding to align off-splice core sections.")
+        print("Finalizing Composite. Proceeding to align off-splice core sections.")
         plt.close(self.fig)

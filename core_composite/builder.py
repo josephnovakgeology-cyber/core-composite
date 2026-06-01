@@ -90,7 +90,6 @@ class CompositeBuilder:
                 all_proxies.update(c.active_proxies)
         all_proxies = list(all_proxies)
         
-        print(f"DEBUG - Proxies registered by builder: {all_proxies}")
 
         if proxy != 'auto' and proxy not in all_proxies:
             print(f"Error: '{proxy}' not found. Available: {all_proxies}")

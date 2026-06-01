@@ -200,7 +200,7 @@ def export_affine_table(builder, output_filename="Master_Final_Affine_Table.csv"
     This captures the final state after all automated and manual tweaks.
     """
     
-    print(f"\n Exporting Final Affine/Splice Table")
+    print(f" Exporting Final Affine/Splice Table")
     records = []
     
     for h_name, hole in builder.holes.items():
@@ -239,7 +239,7 @@ def export_affine_table(builder, output_filename="Master_Final_Affine_Table.csv"
                 
 def export_and_save(builder, active_holes, all_proxies):
     """Compiles all data into CSVs for the Master Splice and individual holes."""
-    print("\n Starting Data Export ")
+    print(" Starting Data Export ")
     
     # Loop through every data type (proxy)
     for proxy in all_proxies:
@@ -326,7 +326,7 @@ def map_subsamples_to_mcd(builder, csv_path, output_filename="Mapped_Subsamples.
     calculates their Composite Depth (MCD) using the current affine/splice model.
     """
 
-    print(f"\nMapping Subsamples to MCD from {csv_path}")
+    print(f" Mapping Subsamples to MCD from {csv_path}")
     try:
         df = pd.read_csv(csv_path)
     except Exception as e:
@@ -425,7 +425,7 @@ def export_project_data(builder_obj, output_prefix="Core_Composite_Master"):
     Extracts the final alignment data from the CompositeBuilder and exports 
     the Affine Table (shifts/stretches) and the Master Splice Record to CSVs.
     """
-    print(f"\nExporting project data with prefix '{output_prefix}'...")
+    print(f" Exporting project data with prefix '{output_prefix}'...")
     
     # 1. Build and Export the Affine Table
     affine_data = []
@@ -447,7 +447,7 @@ def export_project_data(builder_obj, output_prefix="Core_Composite_Master"):
         affine_df = pd.DataFrame(affine_data)
         affine_filename = f"{output_prefix}_Affine_Table.csv"
         affine_df.to_csv(affine_filename, index=False)
-        print(f"  -> Saved Affine Table: {affine_filename}")
+        print(f" Saved Affine Table: {affine_filename}")
         
     # 2. Export the Splice Record
     if hasattr(builder_obj, 'splice') and builder_obj.splice is not None:
@@ -455,8 +455,8 @@ def export_project_data(builder_obj, output_prefix="Core_Composite_Master"):
             splice_df = pd.DataFrame(builder_obj.splice.intervals)
             splice_filename = f"{output_prefix}_Splice_Record.csv"
             splice_df.to_csv(splice_filename, index=False)
-            print(f"  -> Saved Master Splice Record: {splice_filename}")
+            print(f" Saved Master Splice Record: {splice_filename}")
         else:
-            print("  -> No splice intervals found to export.")
+            print("  No splice intervals found to export.")
             
     print("Export complete.")

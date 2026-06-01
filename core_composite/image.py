@@ -127,7 +127,7 @@ class CorePhotoDigitizer:
 
         
     def _process_background_curves(self):
-        print("\nExtracting 2D Lighting Surface and Color Temperature Gradients...")
+        print("Extracting 2D Lighting Surface and Color Temperature Gradients...")
 
         # Vertical background
         x1_y, y1_y, x2_y, y2_y = self.bg_coords_y
@@ -336,11 +336,11 @@ class CorePhotoDigitizer:
             self.calib_c_a = 0.0 - meas_w_a
             self.calib_c_b = 0.0 - meas_w_b
             
-            print(f" -> Best-Fit L* Slope: {self.calib_m_L:.2f}, Offset: {self.calib_c_L:.2f}", flush=True)
+            print(f" Best-Fit L* Slope: {self.calib_m_L:.2f}, Offset: {self.calib_c_L:.2f}", flush=True)
             self._start_cropping_phase()
             
         except Exception as e:
-            print(f"\nCRITICAL ERROR in anchor calculation: {e}\n", flush=True)
+            print(f"!!YIKES!! Critical Error in anchor calculation: {e}\n", flush=True)
             self.calib_m_L, self.calib_c_L, self.calib_c_a, self.calib_c_b = 1.0, 0.0, 0.0, 0.0
             self._start_cropping_phase()
 
@@ -407,7 +407,7 @@ class CorePhotoDigitizer:
             
         sorted_coords = sorted(self.saved_coords, key=lambda box: box['x1'])
         
-        print("\nLoading section metadata and extracting data...")
+        print(" Loading section metadata and extracting data...")
         summary_df = pd.read_csv(self.summary_csv)
         summary_df.columns = summary_df.columns.str.strip()
         
@@ -421,7 +421,7 @@ class CorePhotoDigitizer:
         elif 'Top(mbsf)' in summary_df.columns:
             self.col_top = 'Top(mbsf)'
         else:
-            print("ERROR: Could not find a valid top depth column.")
+            print("Error: Could not find a valid top depth column.")
             return None
             
         if 'Length (m)' in summary_df.columns:
@@ -431,7 +431,7 @@ class CorePhotoDigitizer:
         elif 'Curated length (m)' in summary_df.columns:
             self.col_length = 'Curated length (m)'
         else:
-            print("ERROR: Could not find a valid length column.")
+            print("Error: Could not find a valid length column.")
             return None
         
         csv_sites = summary_df[col_site].astype(str).str.replace('U', '', regex=False)
@@ -447,7 +447,7 @@ class CorePhotoDigitizer:
             core_df = core_df[core_df[self.col_sec].astype(str).str.strip() == str(self.section)].copy()
             
         if core_df.empty:
-            print(f"ERROR: Could not find metadata for Site {self.site}{self.hole} Core {self.core} Section {self.section}!")
+            print(f"Error: Could not find metadata for Site {self.site}{self.hole} Core {self.core} Section {self.section}!")
             return None
             
         core_df['_sort_val'] = pd.to_numeric(core_df[self.col_top], errors='coerce')
@@ -471,7 +471,7 @@ class CorePhotoDigitizer:
             length_m = float(raw_length) if raw_length else float('nan')
 
             if not raw_top or not raw_length:
-                print(f"  -> WARNING: Missing depth/length metadata for Section {sec_name}. Output depths will be NaN.")
+                print(f"  Warning: Missing depth/length metadata for Section {sec_name}. Output depths will be NaN.")
             
             print(f"Processing Section {sec_name}...")
             
@@ -479,7 +479,7 @@ class CorePhotoDigitizer:
             y2_raw = box['y2']
             
             if box['x1'] >= box['x2'] or y1_raw >= y2_raw:
-                print(f"  -> WARNING: Skipping invalid box for Section {sec_name}. (Accidental click?)")
+                print(f"  Warning: Skipping invalid box for Section {sec_name}. (Accidental click?)")
                 continue
                 
             original_height = y2_raw - y1_raw
@@ -515,9 +515,9 @@ class CorePhotoDigitizer:
             lab_core[:, :, 0] = np.clip(lab_core[:, :, 0], 0, 100)
             
             if self.show_diagnostics and i in [0, 1]:
-                print(f"Generating Horizontal Cylinder Diagnostic Plot for Box {i+1}...")
+                print(f"Generating Horizontal Diagnostic Plot for Box {i+1}...")
                 fig_horiz, ax_horiz = plt.subplots(figsize=(8, 5))
-                ax_horiz.set_title(f"Diagnostic: Horizontal Cylinder Shadows (Box {i+1})", fontweight='bold')
+                ax_horiz.set_title(f"Diagnostic: Horizontal Shadows (Box {i+1})", fontweight='bold')
                 ax_horiz.plot(x_coords, x_profile, color='gray', alpha=0.7, label='Raw Horizontal Profile')
                 ax_horiz.plot(x_coords, x_curve, color='red', linewidth=3, label='Polynomial Lighting Model')
                 ax_horiz.set_xlabel("Pixel Column (Left Edge -> Right Edge of Box)")
@@ -605,7 +605,7 @@ class CorePhotoDigitizer:
                 
         final_df = pd.DataFrame(all_data)
         final_df.to_csv(output_filename, index=False)
-        print(f"\nSUCCESS! High-res L*a*b* mapped and saved to: {output_filename}")
+        print(f" Booyah! L*a*b* mapped and saved to: {output_filename}")
         
         if self.show_diagnostics:
             plt.show()
@@ -644,10 +644,10 @@ def parse_odp_filename(filepath):
     # Clean the filename first: strip extensions and "_converted" suffix
     clean_name = re.sub(r"(_converted)?\.(png|jpg|jpeg|tif|tiff|pdf)$", "", filename, flags=re.IGNORECASE)
     
-    # Modern IODP (Requires a "U" in the Site name)
+    # IODP (Requires a "U" in the Site name)
     # Example: "346U1426A1", "321U1338A1", "Exp342-U1426A-1H"
     
-    pattern_modern = r"^(?:Exp\.|Exp)?(\d{2,4})?[-_]?([Uu]\d{3,4})([A-Za-z\*]?)[-_\.]?(\d{1,3})([A-Za-z]?)[-_\.]?(\d{1,2}|CC)?$"
+    pattern_modern = r"^(?:Exp\.|Exp)?(\d{2,4})?[-_]?([Uu]\d{3,4})([A-Za-z\*]?)[-_\.]?(\d{1,3})([A-Za-z]?)[-_\.]?(\d{1,2}|CC)?$" # just imagine how much I enjoyed figuring this out :(
     match_modern = re.match(pattern_modern, clean_name)
     
     if match_modern:
@@ -659,9 +659,9 @@ def parse_odp_filename(filepath):
         section = match_modern.group(6).upper() if match_modern.group(6) else None
         return site, hole, core, core_type, section
 
-    # Legacy ODP/DSDP or Shorthand (No "U" in the Site name)
+    # ODP/DSDP or Shorthand (No "U" in the Site name)
     # Example: "925B1H", "374.5R"
-    pattern_legacy = r"^(\d{3,4})([A-Za-z\*]?)[-_\.]?(\d{1,3})([A-Za-z]?)[-_\.]?(\d{1,2}|CC)?$"
+    pattern_legacy = r"^(\d{3,4})([A-Za-z\*]?)[-_\.]?(\d{1,3})([A-Za-z]?)[-_\.]?(\d{1,2}|CC)?$" # just imagine how much I enjoyed figuring this out :(
     match_legacy = re.match(pattern_legacy, clean_name)
     
     if match_legacy:
@@ -714,13 +714,10 @@ def run_batch_digitization(image_paths, section_summary_csv, leg, output_prefix=
             print(f"Skipping {img_path}: Could not auto-detect metadata.")
             continue
             
-        # Dynamic print statement
-        print(f"\n{'='*50}")
         if section:
-            print(f"LAUNCHING DIGITIZER: Site {site}{hole}, Core {core}{core_type}, Section {section}")
+            print(f"Running Digitizer: Site {site}{hole}, Core {core}{core_type}, Section {section}")
         else:
-            print(f"LAUNCHING DIGITIZER: Site {site}{hole}, Core {core}{core_type} (Whole Core Composite)")
-        print(f"{'='*50}")
+            print(f"Running Digitizer: Site {site}{hole}, Core {core}{core_type} (Whole Core Composite)")
         
         # Initialize the tool
         digitizer = CorePhotoDigitizer(
@@ -747,7 +744,7 @@ def run_batch_digitization(image_paths, section_summary_csv, leg, output_prefix=
             extracted_data_by_hole[hole].append(df)
 
     # Post-processing: combine and export datasets
-    print("\nCombining processed cores into Hole-specific datasets...")
+    print("Combining processed cores into Hole-specific datasets...")
     master_dfs = {}
     
     for hole, dfs in extracted_data_by_hole.items():
@@ -809,12 +806,10 @@ def run_batch_digitization(image_paths, section_summary_csv, leg, output_prefix=
         
         try:
             master_df.to_csv(final_output_csv, index=False)
-            print(f"\n{'='*50}")
-            print(f"Success! Master dataset for Hole {hole} saved to: {final_output_csv}")
+            print(f" Master dataset for Hole {hole} saved to: {final_output_csv}")
         except PermissionError:
             backup_name = f"{output_prefix}_Hole_{safe_hole}_Color_Reflectance_BACKUP.csv"
             master_df.to_csv(backup_name, index=False)
-            print(f"\n{'='*50}")
             print(f" Could not save to {final_output_csv} (is it open in Excel?)")
             print(f" Master dataset for Hole {hole} saved as {backup_name} instead!")
             
@@ -829,7 +824,7 @@ def compile_hole(directory_path, site_hole, output_filename=None):
     and exports a final master CSV. This allows the user to analyze photos in batches
     rather than all at once. 
     """
-    print(f"\nCompiling Dataset for {site_hole}")
+    print(f"Compiling Dataset for {site_hole}")
     
     # Find all exported CSVs matching the Hole
     search_pattern = os.path.join(directory_path, f"*{site_hole}*.csv")
@@ -843,7 +838,7 @@ def compile_hole(directory_path, site_hole, output_filename=None):
         valid_csvs.append(f)
         
     if not valid_csvs:
-        print(f"ERROR: No individual core CSVs found for '{site_hole}' in {directory_path}.")
+        print(f"Error: No individual core CSVs found for '{site_hole}' in {directory_path}.")
         return None
         
     print(f"Found {len(valid_csvs)} core files. Stitching together...")
@@ -854,10 +849,10 @@ def compile_hole(directory_path, site_hole, output_filename=None):
         try:
             df_list.append(pd.read_csv(csv))
         except Exception as e:
-            print(f"  -> Skipping {os.path.basename(csv)}: {e}")
+            print(f" Skipping {os.path.basename(csv)}: {e}")
             
     if not df_list:
-        print("ERROR: No valid data could be loaded.")
+        print("Error: No valid data could be loaded.")
         return None
         
     master_df = pd.concat(df_list, ignore_index=True)
@@ -877,3 +872,16 @@ def compile_hole(directory_path, site_hole, output_filename=None):
     print(f"Total Measurements: {len(master_df)}")
     
     return master_df
+
+def get_reflectance(lstar_array):
+    """
+    Converts L* values to % Reflectance (relative luminance Y in CIE Lab parlance).
+    """
+    lstar = np.asarray(lstar_array)
+    fy = (lstar + 16.0) / 116.0
+    reflectance = np.where(
+        lstar > 8.0, 
+        np.power(fy, 3) * 100.0, 
+        (lstar / 903.296296) * 100.0
+    )
+    return reflectance
