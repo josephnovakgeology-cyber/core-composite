@@ -13,3 +13,18 @@ This algorithm is particularly useful for maximizing the scientific lifespan of 
 **3) SpliceBuilderGUI** is an interactive GUI that enables users to generate new composite sections from physical properties data within the `gui.py` module. 
 
 ## Extracting color data from core photos: CorePhotoDigitizer
+CorePhotoDigitizer is set up to convert the .pdf core photos from the DSDP / ODP / IODP database to .jpg format prior to image extration. 
+A demo version of the script that implements CorePhotoDigitizer is included in the "demos" folder. 
+The script needs to be in the same folder as the .pdfs of the core photos and requires a supporting file that includes the core section summary from the preliminary report. 
+
+### Finding Core Photos in the Janus Database
+The ODP Janus web database stores all of the data from legacy cores that was produced by Shipboard Scientific Parties. It can be accessed here: [Janus](https://www-odp.tamu.edu/database/).
+
+Click the highlighted link to access the database from the main webpage.
+
+<img width="930" height="926" alt="image" src="https://github.com/user-attachments/assets/8cea1623-ab26-42b9-96d7-4a266cd6953d" />
+
+From there, you can access the data from each DSDP, ODP, or IODP leg by clicking the Report number at the top of each column on the database, highlighted in the image below.
+
+<img width="1892" height="1006" alt="image" src="https://github.com/user-attachments/assets/cc9a0397-0625-4ffc-9606-dffb4b0211f5" />
+
