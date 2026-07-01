@@ -42,3 +42,4 @@ Each of the image links will take you to the core photos, which you can download
 <img width="687" height="720" alt="image" src="https://github.com/user-attachments/assets/0c988f3e-55e7-4223-95ea-7a8b4d4ed338" />
 
 ### Core Image Analysis
+Alrighty then. You now have all of your core images in a single folder for your project. You now need to extract color data from them. 
