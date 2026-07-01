@@ -53,6 +53,11 @@ Now you need to install Core Composite into your Python environment.
    `pip install .`
 4. Press **Enter**.
 
+**TROUBLESHOOTING**
+If you get the "pip not found" error, try this:
+Windows: py -m pip install .
+Mac / Linux: python3 -m pip install .
+
 Your screen will print out a lot of text as it automatically downloads all the necessary background tools. Once it stops, Core Composite is installed and ready to use.
 
 #### Step 5: Install and Open Spyder
