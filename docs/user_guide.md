@@ -28,3 +28,10 @@ From there, you can access the data from each DSDP, ODP, or IODP leg by clicking
 
 <img width="1892" height="1006" alt="image" src="https://github.com/user-attachments/assets/cc9a0397-0625-4ffc-9606-dffb4b0211f5" />
 
+This will take you to the data for all of the drill sites from that DSDP, ODP, or IODP Leg. From here, click on the number of the drill site you are studying, highlighted in the image below.
+
+<img width="852" height="1052" alt="image" src="https://github.com/user-attachments/assets/0517b31c-c7ae-4014-99f8-6abd7c1ab650" />
+
+Great. You are now looking at all of the data archived by DSDP, ODP, or IODP from your drill site. The numbers correspond to the number of data points from each hole of a given data type. Click on the numbers to see the data. Here, we are going to click on the photos for Site 887 Hole A, highlighted below.
+
+<img width="1302" height="1142" alt="image" src="https://github.com/user-attachments/assets/ed30a9f1-bddb-4dab-882b-bffd99879d67" />
