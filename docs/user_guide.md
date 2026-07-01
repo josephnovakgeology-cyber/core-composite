@@ -30,8 +30,12 @@ From there, you can access the data from each DSDP, ODP, or IODP leg by clicking
 
 This will take you to the data for all of the drill sites from that DSDP, ODP, or IODP Leg. From here, click on the number of the drill site you are studying, highlighted in the image below.
 
-<img width="852" height="1052" alt="image" src="https://github.com/user-attachments/assets/0517b31c-c7ae-4014-99f8-6abd7c1ab650" />
+<img width="1302" height="1142" alt="image" src="https://github.com/user-attachments/assets/641387db-19fb-4ef2-a97a-a50ae6f267c0" />
 
 Great. You are now looking at all of the data archived by DSDP, ODP, or IODP from your drill site. The numbers correspond to the number of data points from each hole of a given data type. Click on the numbers to see the data. Here, we are going to click on the photos for Site 887 Hole A, highlighted below.
 
 <img width="1302" height="1142" alt="image" src="https://github.com/user-attachments/assets/ed30a9f1-bddb-4dab-882b-bffd99879d67" />
+
+Each of the image links will take you to the core photos, which you can download as a .pdf file. Core composite will convert them to .jpg format for you later, so do not worry about that. 
+
+<img width="687" height="720" alt="image" src="https://github.com/user-attachments/assets/0c988f3e-55e7-4223-95ea-7a8b4d4ed338" />
