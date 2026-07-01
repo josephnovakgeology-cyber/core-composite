@@ -45,3 +45,7 @@ Each of the image links will take you to the core photos, which you can download
 Alrighty then. You now have all of your core images in a single folder for your project. You now need to extract color data from them. 
 
 The basic format of the script that is used for calling the image analysis functions in core composite is contained in "image_processing_demo.py" in the demos folder of this Github repository. Go ahead and copy "image_processing_demo.py" into the same folder as all of your core images. Then, launch your python IDE. I prefer to use Spyder, so this tutorial is written with that use case in mind. When you first launch Spyder, your screen should look something like this:
+
+<img width="1911" height="1127" alt="image" src="https://github.com/user-attachments/assets/351535aa-faac-4620-af6f-18d0d5c1933e" />
+
+Use the folder button on the top left side to open the demo script.
