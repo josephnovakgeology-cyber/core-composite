@@ -41,6 +41,16 @@ Each of the image links will take you to the core photos, which you can download
 
 <img width="687" height="720" alt="image" src="https://github.com/user-attachments/assets/0c988f3e-55e7-4223-95ea-7a8b4d4ed338" />
 
+You will also need the "core section summary" for your drill site. You can find that here:
+
+<img width="1262" height="1057" alt="image" src="https://github.com/user-attachments/assets/9d16c7a4-aef2-4bf7-b2a0-ae4cee5b7e88" />
+
+When you click the highlighted link, you should see this:
+
+<img width="727" height="1067" alt="image" src="https://github.com/user-attachments/assets/8bba7d9f-a247-4900-a4c7-a6387d2bb095" />
+
+Go ahead and paste this info into a .csv file. Make sure that the information is properly formatted such that the columns are properly divided into cells. This will probably require you to do some reformatting in your .csv file. A trick I like to use is to paste this info into the Notepad app on windows and then copy that text again before pasting into the .csv, which makes sure everything is formatted correctly.
+
 ### Core Image Analysis
 Alrighty then. You now have all of your core images in a single folder for your project. You now need to extract color data from them. 
 
