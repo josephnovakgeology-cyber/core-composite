@@ -420,16 +420,27 @@ def map_subsamples_to_mcd(builder, csv_path, output_filename="Mapped_Subsamples.
     print(f" Successfully mapped {success_count} samples to the Composite Depth scale")
     print(f" Saved to: {output_filename}")
     
-def export_project_data(builder_obj, output_prefix="Core_Composite_Master"):
+def export_project_data(builder, active_holes, all_proxies):
     """
     Extracts the final alignment data from the CompositeBuilder and exports 
     the Affine Table (shifts/stretches) and the Master Splice Record to CSVs.
     """
-    print(f" Exporting project data with prefix '{output_prefix}'...")
+    print("Exporting project data")
     
-    # 1. Build and Export the Affine Table
+    """
+    Compiles all data into CSVs for the Master Splice, individual holes, 
+    and exports the Affine Table and Splice Record.
+    """
+    print(" Starting Data Export ")
+    
+    # Export Affine Table & Composite Record
     affine_data = []
-    for h_name, hole in builder_obj.holes.items():
+    
+    for h_name, hole in builder.holes.items():
+        # Only export affine data for holes active in the GUI
+        if h_name not in active_holes:
+            continue
+            
         for core in hole.cores:
             for sec in core.sections:
                 affine_data.append({
@@ -445,18 +456,97 @@ def export_project_data(builder_obj, output_prefix="Core_Composite_Master"):
                 
     if affine_data:
         affine_df = pd.DataFrame(affine_data)
-        affine_filename = f"{output_prefix}_Affine_Table.csv"
+        affine_filename = "Export_Affine_Table.csv"
         affine_df.to_csv(affine_filename, index=False)
         print(f" Saved Affine Table: {affine_filename}")
         
-    # 2. Export the Splice Record
-    if hasattr(builder_obj, 'splice') and builder_obj.splice is not None:
-        if builder_obj.splice.intervals:
-            splice_df = pd.DataFrame(builder_obj.splice.intervals)
-            splice_filename = f"{output_prefix}_Splice_Record.csv"
+    if hasattr(builder, 'splice') and builder.splice is not None:
+        if builder.splice.intervals:
+            splice_df = pd.DataFrame(builder.splice.intervals)
+            splice_filename = "Export_Splice_Record.csv"
             splice_df.to_csv(splice_filename, index=False)
             print(f" Saved Master Splice Record: {splice_filename}")
         else:
             print("  No splice intervals found to export.")
+
+    # Export physical properties data aligned to composite depth scale
+    # Loop through every data type (proxy)
+    for proxy in all_proxies:
+        master_splice_dfs = []
+        
+        # Loop through every hole
+        for h_name, hole in builder.holes.items():
             
-    print("Export complete.")
+            # Skip holes that are turned off in the UI
+            if h_name not in active_holes:
+                continue
+            
+            hole_dfs = []
+            
+            for core in hole.cores:
+                
+                # Skip cores that aren't tied into the main splice
+                is_locked = any(sec.is_locked for sec in core.sections)
+                has_custom_shift = any(getattr(sec, 'affine_shift', 0.0) != 0.0 for sec in core.sections)
+                if not (is_locked or has_custom_shift):
+                    continue
+                    
+                for sec in core.sections:
+                    if proxy not in sec.scaled_data.columns:
+                        continue
+                        
+                    # Grab valid data for this proxy
+                    df_clean = sec.scaled_data.dropna(subset=[proxy]).copy()
+                    if df_clean.empty:
+                        continue
+                        
+                    # Run the final mathematical offsets for MCD
+                    mbsf = df_clean['Base_Scaled_Depth']
+                    mcd = (mbsf - sec.drilled_top) * sec.stretch_factor + sec.drilled_top + sec.affine_shift
+                    
+                    # only add the specific calculated columns
+                    df_clean['Depth (mcd)'] = mcd
+                    df_clean['Status'] = 'on-splice' if sec.is_locked else 'off-splice'
+                    
+                    df_clean['Hole'] = h_name
+                    df_clean['Core'] = core.core_id
+                    df_clean['Section'] = sec.section_id
+                    
+                    # Add this dataframe block to our hole export list
+                    hole_dfs.append(df_clean)
+                    
+                    # If it's locked, it belongs in the Master Splice export too
+                    if sec.is_locked:
+                        ms_df = df_clean.copy()
+                        ms_df.drop(columns=['Status'], inplace=True, errors='ignore')
+                        master_splice_dfs.append(ms_df)
+                            
+            # Save the specific Hole Data
+            if hole_dfs:
+                df_hole = pd.concat(hole_dfs, ignore_index=True)
+                df_hole.sort_values(by='Depth (mcd)', inplace=True)
+                
+                # Drop internal calculation columns generated by your loader script
+                df_hole.drop(columns=['Base_Scaled_Depth', 'Virtual_Section', 'Core_Clean'], inplace=True, errors='ignore')
+                
+                safe_proxy = re.sub(r'[\\/*?:"<>|]', "", proxy)
+                filename_hole = f"Export_Hole_{h_name}_{safe_proxy}.csv"
+                df_hole.to_csv(filename_hole, index=False)
+                print(f"  -> Saved: {filename_hole}")
+                
+        # Save the Master Splice Data
+        if master_splice_dfs:
+            df_ms = pd.concat(master_splice_dfs, ignore_index=True)
+            df_ms.sort_values(by='Depth (mcd)', inplace=True)
+            
+            # Same internal column cleanup for the Master Splice
+            df_ms.drop(columns=['Base_Scaled_Depth', 'Virtual_Section', 'Core_Clean'], inplace=True, errors='ignore')
+            
+            safe_proxy = re.sub(r'[\\/*?:"<>|]', "", proxy)
+            filename_ms = f"Export_MasterSplice_{safe_proxy}.csv"
+            df_ms.to_csv(filename_ms, index=False)
+            print(f"  -> Saved: {filename_ms}")
+            
+    print("Export Complete. Check your directory.")
+    
+    

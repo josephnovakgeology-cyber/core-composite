@@ -23,6 +23,8 @@ class Phase3ReviewGUI:
     def __init__(self, builder, proxy=None):
         self.builder = builder
         self.history = []
+        self.view_min = None
+        self.view_max = None
         
         # Gather all available proxies dynamically from the data
         self.all_proxies = []
@@ -41,6 +43,15 @@ class Phase3ReviewGUI:
         self.fig, self.ax = plt.subplots(figsize=(15, 8))
         self.fig.canvas.manager.set_window_title('Multi-Track Alignment')
         plt.subplots_adjust(left=0.18, bottom=0.15)
+        
+        # UI Element: Adjusted Depth Window Controls (TextBoxes)
+        ax_min = plt.axes([0.42, 0.05, 0.08, 0.05])
+        self.txt_min = TextBox(ax_min, 'Min: ', initial='')
+        self.txt_min.on_submit(self.submit_min)
+
+        ax_max = plt.axes([0.55, 0.05, 0.08, 0.05])
+        self.txt_max = TextBox(ax_max, 'Max: ', initial='')
+        self.txt_max.on_submit(self.submit_max)
         
         # UI Element: Proxy RadioButtons
         ax_radio_proxy = plt.axes([0.02, 0.65, 0.12, 0.15])
@@ -87,6 +98,20 @@ class Phase3ReviewGUI:
         
         self.fig.canvas.mpl_connect('button_press_event', self.on_click)
         self.update_plots()
+        
+    def submit_min(self, text):
+        try:
+            self.view_min = float(text) if text.strip() != '' else None
+        except ValueError:
+            self.view_min = None
+            self.update_plots()
+
+    def submit_max(self, text):
+        try:
+            self.view_max = float(text) if text.strip() != '' else None
+        except ValueError:
+            self.view_max = None
+        self.update_plots()
 
     def switch_proxy(self, label):
         self.proxy = label
@@ -118,10 +143,13 @@ class Phase3ReviewGUI:
         
         splice_df = self.builder.get_splice_dataframe(self.proxy)
         if not splice_df.empty:
-            data_range = splice_df[self.proxy].max() - splice_df[self.proxy].min()
+            proxy_min = splice_df[self.proxy].min()
+            data_range = splice_df[self.proxy].max() - proxy_min
             offset_step = data_range * 1.2  
+            proxy_baseline = proxy_min  # Captures the baseline data shift
         else:
             offset_step = 1.0
+            proxy_baseline = 0.0
             
         self.ax.set_ylabel(f"{self.proxy} (Offset by {offset_step:.1f})", fontweight='bold')
 
@@ -129,7 +157,7 @@ class Phase3ReviewGUI:
             self.ax.plot(splice_df['MCD'], splice_df[self.proxy], 
                          color='black', lw=1, alpha=0.3, label='Composite Section')
             
-            self.ax.text(0.01, 0, "Composite", 
+            self.ax.text(0.01, proxy_baseline, "Composite", 
                          transform=self.ax.get_yaxis_transform(),
                          fontsize=10, fontweight='bold', color='black',
                          verticalalignment='center', zorder=20,
@@ -198,10 +226,10 @@ class Phase3ReviewGUI:
                     plotted_anything_for_hole = True
 
             if plotted_anything_for_hole:
-                self.ax.text(0.01, hole_offset, f"Hole {h_name}", 
+                self.ax.text(0.01, hole_offset + proxy_baseline, f"Hole {h_name}", 
                              transform=self.ax.get_yaxis_transform(),
                              fontsize=10, fontweight='bold', color='black',
-                             verticalalignment='center', zorder=20,
+                             verticalalignment='top', zorder=20,
                              bbox=dict(facecolor='lightgray', alpha=0.8, edgecolor='gray', boxstyle='round,pad=0.4'))
                 visible_track_idx += 1
 
@@ -225,6 +253,11 @@ class Phase3ReviewGUI:
                          horizontalalignment='right', fontweight='bold')
 
         self.ax.legend(loc='upper right')
+        
+        if self.view_min is not None and self.view_max is not None:
+            if self.view_min < self.view_max: # Prevent crash if user types min > max
+                self.ax.set_xlim(self.view_min, self.view_max)
+        
         self.fig.canvas.draw_idle()
 
     def on_anchor_clicked(self, event):
