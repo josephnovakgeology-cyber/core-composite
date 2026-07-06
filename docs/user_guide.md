@@ -51,6 +51,8 @@ When you click the highlighted link, you should see this:
 
 Go ahead and paste this info into a .csv file. Make sure that the information is properly formatted such that the columns are properly divided into cells. This will probably require you to do some reformatting in your .csv file. A trick I like to use is to paste this info into the Notepad app on windows and then copy that text again before pasting into the .csv, which makes sure everything is formatted correctly.
 
+Make sure this .csv file is saved in the same folder as your core photos. I like to call this file something like "887_section_summary.csv" so that I do not confuse it with other files.
+
 ### Core Image Analysis
 Alrighty then. You now have all of your core images in a single folder for your project. You now need to extract color data from them. 
 
