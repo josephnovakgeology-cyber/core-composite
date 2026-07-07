@@ -79,3 +79,27 @@ When you first launch Spyder, your screen should look something like this:
 <img width="1911" height="1127" alt="image" src="https://github.com/user-attachments/assets/351535aa-faac-4620-af6f-18d0d5c1933e" />
 
 Use the folder button on the top left side to open the demo script. You should now see the code that calls the image analysis functions in Core Composite:
+
+<img width="1905" height="1127" alt="image" src="https://github.com/user-attachments/assets/86e866dc-f75e-4452-920b-7e9f39dd1eff" />
+
+To run this code, you will have to set your working directory to be the folder that contains the .pdf files of the core photographs. You can do that by clicking the folder button on the **top right** of the spyder user interface:
+
+<img width="1912" height="1142" alt="image" src="https://github.com/user-attachments/assets/65e4e8cd-dd14-4cd6-89df-a3b2f87b0abf" />
+
+Before we run the code, we need to make sure that the information matches for our site. The demo file is set up for ODP Site 887, but if you are working on another site, you will need to update two things:
+
+**1) Line 55: section_summary_csv="887_section_summary.csv" - this line must match the name of your section summary file, with the name and file extension contained within the quotation marks.**
+
+**2) Line 56: leg=145 - this line must match the expedition number your drill site was collected during.**
+
+**3) Line 57: output_prefex="Site887" - this must match your site name, with the name entirely contained within the quotation marks.**
+
+Once that is all set, hit the little green arrow on the top ribbon of spyder to save and run the script:
+
+<img width="1912" height="1142" alt="image" src="https://github.com/user-attachments/assets/aaca94fe-d88d-4cde-86b1-9713e41bff44" />
+
+When you run this script for the first time, it will convert all of the .pdf files to .jpg before opening a popup window where you will begin the image analysis. Your console in spyder should look like this:
+
+<img width="616" height="707" alt="image" src="https://github.com/user-attachments/assets/d48d24bc-d098-4dc4-ae32-1b7d9ea4470f" />
+
+The popup window
