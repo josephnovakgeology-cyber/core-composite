@@ -102,4 +102,26 @@ When you run this script for the first time, it will convert all of the .pdf fil
 
 <img width="616" height="707" alt="image" src="https://github.com/user-attachments/assets/d48d24bc-d098-4dc4-ae32-1b7d9ea4470f" />
 
-The popup window
+The popup window will show you the first core photograph in your sequence and will ask you to draw a single box down one of the white tracks to establish the background lighting effects in the image. My preferred method for this is shown below:
+
+<img width="607" height="991" alt="image" src="https://github.com/user-attachments/assets/a656a369-1f32-4598-92d3-83adf7107d3b" />
+
+Notice that the cores in this photo are not perfectly vertical. This is the case in most legacy core photographs. It can make drawing a box that only incapsulates the white backtrack hard to do, so be careful. 
+
+Once you have drawn the vertical box, click enter. Now draw a horizontal box, like so:
+
+<img width="587" height="962" alt="image" src="https://github.com/user-attachments/assets/3eb03361-d1b7-49fc-97a8-67a8b1c2c860" />
+
+Hit enter. You will be prompted about whether you want to calibrate the image processing with a color checker. In almost all cases, there is no color checker present, so you will select skip. If there is a color checker present, follow the prompts to calibrate the image processing. Compare your extracted values with and without the calibration to see whether this additional step is useful for the images you are processing. 
+
+You will then be prompted to draw boxes over the sediment core sections by left clocking and dragging your mouse. I prefer to do this in the middle of cores, like so:
+
+<img width="567" height="992" alt="image" src="https://github.com/user-attachments/assets/6b632dad-0cd5-4fea-a437-485db9886c4a" />
+
+**Important** *Notice that in core section 1, I draw the box down to 150 cm, even though the bottom of this core section was sampled for intersitial water analyses ("IW") from 145 cm to 150 cm. This is because the cored length of this section in "887_section_summary.csv" is 1.5 m. The discrepency is caused by the fact that this sediment was sampled before the core was photographed. Unfortunately, we have to address this in one of two ways:*
+
+*1). Draw a box down to 150 cm (1.5 m) and then later delete this interval from the spreadsheet. [this tutorial uses this method].*
+
+*2). Edit the variable "CL(m)" in "887_section_summary.csv" to match the depth to which there is sediment in the photograph (in this case, 1.45 m) and then draw the box over the region of the core section where there is sediment.*
+
+*My overwhelming preference is to use the first method because it is much more efficient. This is because you can sort the final spreadsheet by L values and then delete all values that are near 100. You will see this at the end of the process.*
