@@ -135,11 +135,7 @@ After you finish color extraction of the last core, the popup window will close 
 
 <img width="615" height="582" alt="image" src="https://github.com/user-attachments/assets/33dff198-f75a-45c0-8db0-3457a7b4a26c" />
 
-And your working directory will have a lot of new files:
-
-<img width="620" height="550" alt="image" src="https://github.com/user-attachments/assets/8a01fbf8-6bd1-4218-9a21-e37f3d328017" />
-
-Notice the files "Site887_Hole_A_Color_Reflectance.csv" and "Site887_Hole_B_Color_Reflectance.csv" - these files contain all of the extracted color data for the cores from hole A and hole B that you processed plotted on the driller's wire line depth scale [depth (mbsf) or meters below sea floor] (if you are processing a different core, you will see different names). Let's open "Site887_Hole_A_Color_Reflectance.csv" to see what is inside.
+And your working directory will have a lot of new files. Notice "Site887_Hole_A_Color.csv" and "Site887_Hole_B_Color.csv" - these files contain all of the extracted color data for the cores from hole A and hole B that you processed plotted on the driller's wire line depth scale [depth (mbsf) or meters below sea floor] (if you are processing a different core, you will see different names). Let's open "Site887_Hole_A_Color.csv" to see what is inside.
 
 <img width="1907" height="897" alt="image" src="https://github.com/user-attachments/assets/8606c60b-215c-43cc-9ba5-78650fa7715b" />
 
@@ -172,6 +168,6 @@ After cleaning, your dataset from 887A should look something like this:
 Repeat this process with 887B. You just finished extracting your first color data!
 
 ### Calculating % reflectance from L\*
-
+Core Composite includes a simple function to calculate % reflectance from L* values. An example of how to do that with your 887A color data is included in the "get_reflectance_demo.py" file. 
 
 ## Building a new splice / composite section: SpliceBuilderGUI
