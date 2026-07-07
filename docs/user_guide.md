@@ -114,9 +114,11 @@ Once you have drawn the vertical box, click enter. Now draw a horizontal box, li
 
 Hit enter. You will be prompted about whether you want to calibrate the image processing with a color checker. In almost all cases, there is no color checker present, so you will select skip. If there is a color checker present, follow the prompts to calibrate the image processing. Compare your extracted values with and without the calibration to see whether this additional step is useful for the images you are processing. 
 
-You will then be prompted to draw boxes over the sediment core sections by left clocking and dragging your mouse. I prefer to do this in the middle of cores, skipping the core catcher since those sediments are not stratigraphically useful, like so:
+You will then be prompted to draw boxes over the sediment core sections by left clocking and dragging your mouse. I prefer to do this in the middle of cores, skipping the core catcher since those sediments are not stratigraphically informative, like so:
 
 <img width="567" height="992" alt="image" src="https://github.com/user-attachments/assets/6b632dad-0cd5-4fea-a437-485db9886c4a" />
+
+If you make a mistake, hit the "d" button on your keyboard to undo the last box you drew. Close the window to extract the color data and repeat this process for each core. *Recommendation: make notes of large cracks or voids in each core while doing this step. It will make the post-extraction data processing much easier.*
 
 **Important:** 
 **Notice that in core section 1, I draw the box down to 150 cm, even though the bottom of this core section was sampled for intersitial water analyses ("IW") from 145 cm to 150 cm. This is because the cored length of this section in "887_section_summary.csv" is 1.5 m. The discrepency is caused by the fact that this sediment was sampled before the core was photographed. Unfortunately, we have to address this in one of two ways:**
@@ -127,3 +129,44 @@ You will then be prompted to draw boxes over the sediment core sections by left 
 
 **My overwhelming preference is to use the first method because it is much more efficient. This is because you can sort the final spreadsheet by L\* values and then delete all values that are near 100. You will see this at the end of the process.**
 
+After you finish color extraction of the last core, the popup window will close and your console will look like this:
+
+<img width="615" height="582" alt="image" src="https://github.com/user-attachments/assets/33dff198-f75a-45c0-8db0-3457a7b4a26c" />
+
+And your working directory will have a lot of new files:
+
+<img width="620" height="550" alt="image" src="https://github.com/user-attachments/assets/8a01fbf8-6bd1-4218-9a21-e37f3d328017" />
+
+Notice the files "Site887_Hole_A_Color_Reflectance.csv" and "Site887_Hole_B_Color_Reflectance.csv" - these files contain all of the extracted color data for the cores from hole A and hole B that you processed plotted on the driller's wire line depth scale [depth (mbsf) or meters below sea floor] (if you are processing a different core, you will see different names). Let's open "Site887_Hole_A_Color_Reflectance.csv" to see what is inside.
+
+<img width="1907" height="897" alt="image" src="https://github.com/user-attachments/assets/8606c60b-215c-43cc-9ba5-78650fa7715b" />
+
+These are the L*, a*, and b* data that we extracted from these core images. We now need to do a bit of post-processing to make sure that there are no artifacts in our color data. We can identify issues by plotting the L* data in our .csv file. An annotated example is plotted below, where we can see large excursions from the bulk of our extracted color data that correspond to features we saw in our core photos:
+
+<img width="1883" height="1095" alt="image" src="https://github.com/user-attachments/assets/8fc6f968-91c6-4304-82b8-af75f5e99f5d" />
+
+These artifacts need to be removed from our data. We can do this by sorting the sheet by the L* and clicking yes when prompted about whether you would like to expand the selection. You can find the sort button under the data tab in Microsoft Excel:
+
+<img width="1905" height="1105" alt="image" src="https://github.com/user-attachments/assets/e8d45dc2-3145-4f08-92b7-53de3f672f51" />
+
+First, sort the sheet by Z to A (largest to smallest when used on numbers) to put all of the rows with high L\* values at the top. In our dataset, the largest L\* values that are part of our sedimentary sequence appear to be ~50, so we will remove all L\* values > 55 to be safe. We will do the same thing for very low values by sorting the sheet from A to Z (smallest to largest), but here we will just remove L\* values <0 since the ash layers (a real geologic feature) also have very low L\* values.  *L\* values < 0 should be removed, since measured L\* cannot be < 0 (these occur because of how the program mitigates lighting artifacts).*
+
+Now, sort the sheet again from A to Z by depth. You will see that, while we removed the extreme values, there are still some sharp color changes that we should investigate further by comparing these sharp color changes to our notes and core photographs. For example, if we look at 887A 2H, there are real sharp color changes due to ash layers, but other sharp changes are caused by voids: 
+
+<img width="727" height="1062" alt="image" src="https://github.com/user-attachments/assets/80cccc22-8798-4c52-a7b1-26a5bf767209" />
+
+A good rule of thumb is to check the following places:
+
+i). The top of section 1 of every core, this is the most likely place to be disturbed by the coring process. 
+
+ii). The bottom of each core section, these are sometimes disturbed, presumably by core splitting.
+
+Be careful to only remove color excursions (artifacts) caused by voids or missing sediment! The best way to do this is to carefully compare your color data to core photographs. It is also ok to simply ignore these features if your purpose is to do stratigraphic correlation, but it will likely cause problems for the automatic of off-splice materials to your splice since the calculated signal-to-noise ratio of these features in that algorithm is very high. 
+
+After cleaning, your dataset from 887A should look something like this:
+
+<img width="1211" height="522" alt="image" src="https://github.com/user-attachments/assets/14208a68-7fde-4ed8-af34-2075ea7c233d" />
+
+Repeat this process with 887B. You just finished extracting your first color data!
+
+## Building a new splice / composite section: SpliceBuilderGUI
