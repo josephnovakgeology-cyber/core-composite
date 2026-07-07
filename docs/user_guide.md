@@ -56,15 +56,15 @@ Make sure this .csv file is saved in the same folder as your core photos. I like
 ### Core Image Analysis
 Alrighty then. You now have all of your core images in a single folder for your project. You now need to extract color data from them. 
 
-The basic format of the script that is used for calling the image analysis functions in core composite is contained in "image_processing_demo.py" in the demos folder of this Github repository. The file path is: core_composite/demos/core_photo_analysis_demo_files/image_processing_demo.py ; Go ahead and copy "image_processing_demo.py" into the same folder as all of your core images. 
+The basic format of the script that is used for calling the image analysis functions in core composite is contained in **"image_processing_demo.py"** in the demos folder of this Github repository. The file path is: **core_composite/demos/core_photo_analysis_demo_files/image_processing_demo.py** ; Go ahead and copy **"image_processing_demo.py"** into the same folder as all of your core images. 
 
 You now need to activate your python environment where you installed Core Composite (see the installation guide for details on how to make a python environment and install core_composite via pip). To do this, you must open Anaconda Prompt (Windows) or the Terminal (Mac / Linux) and type the following command and press enter: 
 
-conda activate your_environment_name_here
+**conda activate your_environment_name_here**
 
 My python environment is called core_composite, so the version of this command that I type is:
 
-conda activate core_composite
+**conda activate core_composite**
 
 Here is what that looks like on my Windows device:
 
@@ -78,4 +78,4 @@ When you first launch Spyder, your screen should look something like this:
 
 <img width="1911" height="1127" alt="image" src="https://github.com/user-attachments/assets/351535aa-faac-4620-af6f-18d0d5c1933e" />
 
-Use the folder button on the top left side to open the demo script.
+Use the folder button on the top left side to open the demo script. You should now see the code that calls the image analysis functions in Core Composite:
