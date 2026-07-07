@@ -802,13 +802,13 @@ def run_batch_digitization(image_paths, section_summary_csv, leg, output_prefix=
         master_df.drop(['norm_depth'], axis=1, inplace=True, errors='ignore')
         
         safe_hole = hole.replace('*', '')
-        final_output_csv = f"{output_prefix}_Hole_{safe_hole}_Color_Reflectance.csv"
+        final_output_csv = f"{output_prefix}_Hole_{safe_hole}_Color.csv"
         
         try:
             master_df.to_csv(final_output_csv, index=False)
             print(f" Master dataset for Hole {hole} saved to: {final_output_csv}")
         except PermissionError:
-            backup_name = f"{output_prefix}_Hole_{safe_hole}_Color_Reflectance_BACKUP.csv"
+            backup_name = f"{output_prefix}_Hole_{safe_hole}_Color_BACKUP.csv"
             master_df.to_csv(backup_name, index=False)
             print(f" Could not save to {final_output_csv} (is it open in Excel?)")
             print(f" Master dataset for Hole {hole} saved as {backup_name} instead!")
