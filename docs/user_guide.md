@@ -60,4 +60,6 @@ The basic format of the script that is used for calling the image analysis funct
 
 <img width="1911" height="1127" alt="image" src="https://github.com/user-attachments/assets/351535aa-faac-4620-af6f-18d0d5c1933e" />
 
+If you have not already, go ahead and download the 
+
 Use the folder button on the top left side to open the demo script.
