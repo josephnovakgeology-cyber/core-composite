@@ -1,7 +1,9 @@
 # Overview
 If you are struggling to figure out how to install Core Composite, please check out the installation guide :)
 
-This doc will walk you through how to use the three major tools within Core Composite:
+This document is really long. Each section is split off into a separate document within the relevant demo folder, which you may find easier to follow.
+
+Here, I will walk you through how to use the three major tools within Core Composite:
 
 **1) CorePhotoDigitizer** is an interactive GUI for processing legacy core photographs from the DSDP, ODP, and IODP contained within the `image.py` module. 
 CorePhotoDigitizer allows geoscientists to extract L*, a*, and b* from analog and digital core photos, which is especially useful when working on drilling sites with no other useful archived stratigraphic information. 
@@ -168,5 +170,8 @@ After cleaning, your dataset from 887A should look something like this:
 <img width="1211" height="522" alt="image" src="https://github.com/user-attachments/assets/14208a68-7fde-4ed8-af34-2075ea7c233d" />
 
 Repeat this process with 887B. You just finished extracting your first color data!
+
+### Calculating % reflectance from L\*
+
 
 ## Building a new splice / composite section: SpliceBuilderGUI
