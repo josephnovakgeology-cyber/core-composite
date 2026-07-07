@@ -56,10 +56,26 @@ Make sure this .csv file is saved in the same folder as your core photos. I like
 ### Core Image Analysis
 Alrighty then. You now have all of your core images in a single folder for your project. You now need to extract color data from them. 
 
-The basic format of the script that is used for calling the image analysis functions in core composite is contained in "image_processing_demo.py" in the demos folder of this Github repository. Go ahead and copy "image_processing_demo.py" into the same folder as all of your core images. Then, launch your python IDE. I prefer to use Spyder, so this tutorial is written with that use case in mind. When you first launch Spyder, your screen should look something like this:
+The basic format of the script that is used for calling the image analysis functions in core composite is contained in "image_processing_demo.py" in the demos folder of this Github repository. The file path is: core_composite/demos/core_photo_analysis_demo_files/image_processing_demo.py ; Go ahead and copy "image_processing_demo.py" into the same folder as all of your core images. 
+
+You now need to activate your python environment where you installed Core Composite (see the installation guide for details on how to make a python environment and install core_composite via pip). To do this, you must open Anaconda Prompt (Windows) or the Terminal (Mac / Linux) and type the following command and press enter: 
+
+conda activate your_environment_name_here
+
+My python environment is called core_composite, so the version of this command that I type is:
+
+conda activate core_composite
+
+Here is what that looks like on my Windows device:
+
+<img width="1167" height="587" alt="image" src="https://github.com/user-attachments/assets/553b718a-00d9-4305-938e-b6271107faa7" />
+
+Then, launch your python IDE. I prefer to use Spyder, so this tutorial is written with that use case in mind. To use spyder in your python environment, you will have to install it if you have not already. See the installation guide for those instructions (it is only one line of code!). To launch spyder from Anaconda prompt or the terminal, simply type "spyder" and press enter:
+
+<img width="1161" height="587" alt="image" src="https://github.com/user-attachments/assets/47e16118-b824-48eb-9480-27c934becc26" />
+
+When you first launch Spyder, your screen should look something like this:
 
 <img width="1911" height="1127" alt="image" src="https://github.com/user-attachments/assets/351535aa-faac-4620-af6f-18d0d5c1933e" />
-
-If you have not already, go ahead and download the "image_processing_demo.py" script from GitHub. The file path is: core_composite/demos/core_photo_analysis_demo_files/image_processing_demo.py
 
 Use the folder button on the top left side to open the demo script.
