@@ -14,9 +14,9 @@ import itertools
 import copy
 from .io import export_project_data
 
-class Phase3ReviewGUI:
+class ReviewGUI:
     """
-    Phase3ReviewGUI gives the user the opportunity to do the following:
+    ReviewGUI gives the user the opportunity to do the following:
         1). Inspect the quality of the automatic alignment of off-splice core sections
         2). Manually provide tiepoints for semi-automatic alignment of entirely off-splice cores
     """
