@@ -2,7 +2,7 @@
 """
 Created on Mon May  4 14:05:55 2026
 
-@author: josep
+@author: joseph novak
 """
 
 from core_composite.io import load_from_multiple_files, load_external_affine, export_affine_table, export_and_save
