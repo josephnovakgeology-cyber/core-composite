@@ -98,3 +98,12 @@ Further instructions on how to refine these off-splice alignments can be found i
 
 ## Placing subsamples onto the composite depth (MCD) scale
 So now you have a splice, how do you place your samples onto that depth scale? Included in this folder is a short script that calls a function for this in Core Composite. Go ahead and download **"map_subsamples_to_mcd_demo.py"** - this file will use the composite depth scale we just made to assign calcium carbonate wt. % measurements from ODP 887 to the composite depth scale. 
+
+Looking at this script, you will notice that it is very similar to the previous demo. That is because the mapping function requires us to define the builder object. If you are working on your own core, make sure that lines 10-32 match what you did to put together the builder object in your work. Then, at line 35, load in the affine table that you made last time. 
+
+You are now ready to call the function **"map_subsamples_to_mcd"** - this function requires three arguments:
+**1). the builder object**
+
+**2). the input file name, as a string**
+
+**3). the output file name, as a string**
