@@ -19,7 +19,13 @@ CorePhotoDigitizer is set up to convert the .pdf core photos from the DSDP / ODP
 A demo version of the script that implements CorePhotoDigitizer is included in the "demos" folder. 
 The script needs to be in the same folder as the .pdfs of the core photos and requires a supporting file that includes the core section summary from the preliminary report. 
 
-### Finding Core Photos in the Janus Database
+### Required Files and how to find them in the Janus Database
+**The required files for to use CorePhotoDigitizer are:**
+
+**1). core photo .pdf files**
+
+**2). The core section summary from your drill site, which specifies the cored length of each core section at the drill site**
+
 The ODP Janus web database stores all of the data from legacy cores that was produced by Shipboard Scientific Parties. It can be accessed here: [Janus](https://www-odp.tamu.edu/database/).
 
 Click the highlighted link to access the database from the main webpage.
