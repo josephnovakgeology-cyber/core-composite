@@ -322,27 +322,26 @@ def export_and_save(builder, active_holes, all_proxies):
 
 def map_subsamples_to_mcd(builder, csv_path, output_filename="Mapped_Subsamples.csv"):
     """
-    Takes an external CSV of subsample data (e.g., benthic oxygen isotopes) and 
-    calculates their Composite Depth (MCD) using the current affine/splice model.
+    Takes an external CSV of subsample data and calculates their 
+    Composite Depth (MCD) using the current affine/splice model.
     """
 
-    print(f" Mapping Subsamples to MCD from {csv_path}")
+    print(f"Mapping Subsamples to MCD from {csv_path}...")
+    
     try:
         df = pd.read_csv(csv_path)
     except Exception as e:
         print(f"Error reading file: {e}")
         return
         
-    # Fuzzy match columns (case insensitive)
+    # Fuzzy match columns
     hole_col = next((c for c in df.columns if 'hole' in c.lower()), None)
     core_col = next((c for c in df.columns if 'core' in c.lower()), None)
     sec_col = next((c for c in df.columns if 'sec' in c.lower() and 'sed' not in c.lower()), None)
-    
-    # Look for the original depth column (ignore any old MCD columns if they exist)
     depth_col = next((c for c in df.columns if 'depth' in c.lower() and 'mcd' not in c.lower() and 'comp' not in c.lower()), None)
     
     if not hole_col or not core_col or not depth_col:
-        print("Error: Subsample CSV must contain at least 'Hole', 'Core', and 'Depth' (mbsf) columns.")
+        print(f"Error: Missing required columns. Found Hole: {hole_col}, Core: {core_col}, Depth: {depth_col}")
         return
         
     mcd_values = []
@@ -350,7 +349,14 @@ def map_subsamples_to_mcd(builder, csv_path, output_filename="Mapped_Subsamples.
     for idx, row in df.iterrows():
         raw_hole = str(row[hole_col]).strip()
         raw_core = str(row[core_col]).strip()
-        raw_depth = float(row[depth_col]) if not pd.isna(row[depth_col]) else np.nan
+        
+        # Parse depth
+        try:
+            raw_depth = float(row[depth_col]) if not pd.isna(row[depth_col]) else np.nan
+        except ValueError:
+            print(f"Row {idx}: Invalid depth value '{row[depth_col]}'. Skipping.")
+            mcd_values.append(np.nan)
+            continue
         
         if pd.isna(raw_depth):
             mcd_values.append(np.nan)
@@ -362,15 +368,14 @@ def map_subsamples_to_mcd(builder, csv_path, output_filename="Mapped_Subsamples.
             if h_name.endswith(raw_hole) or raw_hole.endswith(h_name):
                 target_hole = h_obj
                 break
+                
         if not target_hole:
+            print(f"Row {idx} [HOLE MISMATCH]: CSV Hole '{raw_hole}' not found in builder holes {list(builder.holes.keys())}")
             mcd_values.append(np.nan)
             continue
             
-        # Match the Core (ignoring letters like 'H' or 'X')
+        # Match the Core
         target_core = None
-        
-        # If pandas added a '.0', chop it off before doing the regex
-        # regex = regular expression pattern, the search pattern used for matching
         if raw_core.endswith('.0'):
             raw_core = raw_core[:-2]
             
@@ -380,7 +385,10 @@ def map_subsamples_to_mcd(builder, csv_path, output_filename="Mapped_Subsamples.
             if core_num_obj == core_num_csv:
                 target_core = c_obj
                 break
+                
         if not target_core:
+            available_cores = [c.core_id for c in target_hole.cores]
+            print(f"Row {idx} [CORE MISMATCH]: CSV Core '{raw_core}' (Parsed as '{core_num_csv}') not found in Hole {raw_hole}. Available: {available_cores[:5]}...")
             mcd_values.append(np.nan)
             continue
             
@@ -393,32 +401,32 @@ def map_subsamples_to_mcd(builder, csv_path, output_filename="Mapped_Subsamples.
                     target_sec = s_obj
                     break
         
-        # If no Section column is provided in the CSV, find which section's depths contain the sample
+        # Fallback Section matching
         if not target_sec:
             for s_obj in target_core.sections:
                 if s_obj.drilled_top <= raw_depth <= s_obj.drilled_bottom:
                     target_sec = s_obj
                     break
-            # Just use the core's affine shift if it fell in a gap
+            
             if not target_sec and target_core.sections:
                 target_sec = target_core.sections[0]
                 
         if not target_sec:
+            print(f"Row {idx} [SECTION MISMATCH]: Could not resolve section for Core '{raw_core}' at depth {raw_depth}.")
             mcd_values.append(np.nan)
             continue
             
-        # Calculate the precise MCD
+        # Calculate MCD for each subsample
         st = getattr(target_sec, 'stretch_factor', 1.0)
         mcd = (raw_depth - target_sec.drilled_top) * st + target_sec.drilled_top + target_sec.affine_shift
         mcd_values.append(mcd)
         
-    # Append the new data and save
     df['Depth (mcd)'] = mcd_values
     df.to_csv(output_filename, index=False)
     
     success_count = len([m for m in mcd_values if not pd.isna(m)])
-    print(f" Successfully mapped {success_count} samples to the Composite Depth scale")
-    print(f" Saved to: {output_filename}")
+    print(f"Successfully mapped {success_count} / {len(df)} samples to the Composite Depth scale.")
+    print(f"Saved to: {output_filename}")
     
 def export_project_data(builder, active_holes, all_proxies):
     """
