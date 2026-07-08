@@ -66,6 +66,26 @@ SpliceBuilderGUI is ready to run once the hole objects are added to the builder.
 
 **SpliceBuilderGUI(builder, mudline_hole = "887B", proxy = "density")**
 
-These arguments specify: 1) the name of your builder object, 2) the mudline hole, i.e. the borehole with the shallowest absolute depth core at the drill site. This is usually specified in the initial site report. If you do not have this info, it will 
+These arguments specify: 1) the name of your builder object, 2) the mudline hole, i.e. the borehole with the shallowest absolute depth core at the drill site. This is usually specified in the initial site report. If you do not have this info, you will need to compare the data from core 1 of the different boreholes to figure out which one contains the uppermost sediment in the sequence.
 
-If you are following along with the demo script, go ahead and press the small green arrow at the top of the spyder tool ribbon. This will run the code and will open the SpliceBuilderGUI.
+If you are following along with the demo script, go ahead and press the small green arrow at the top of the spyder tool ribbon. This will run the code and open the SpliceBuilderGUI. The popup containing the GUI will look like this:
+
+<img width="1876" height="1052" alt="image" src="https://github.com/user-attachments/assets/b17d88f0-8af8-4152-bac1-0e23adf1ee0d" />
+
+You can press the different bottons on the left side of the plot to cycle between different data types and different boreholes. The data plotted at the top of the plot in black is the composite section / splice that you are building. The "mudline_hole" argument from before determines which core is plotted as a starting point for the correlation. 
+
+The data on the bottom of the plot is from the borehole that is currently selected with the buttons on the right. For longer sequences, it can be useful to zoom in on the region where you are currently working, which you can do using the text boxes on the bottom of the plot. "Undo" removes your last tiepoint, and "Finalize" closes the GUI and builds an affine table. 
+
+For this demo, I will primarily use the b* data to build the splice since there are pronounced and repeated variations in those data between each of the boreholes. I am going to draw my first tiepoint between 887B 1H (our mudline core) and 887C 1H. To do this, I first left click on the composite at the place where I want to tie in 887C 1H:
+
+<img width="1830" height="1007" alt="image" src="https://github.com/user-attachments/assets/66ce9cb4-980f-4068-9ff3-de114b1b6157" />
+
+The black dashed line shows where the tiepoint is attached to the composite section / splice. Next, right click on the depth interval of 887C 1H you want to tie into the composite section / splice. In my case, I clicked at about 1 meter, so the result looks like this:
+
+<img width="1846" height="1050" alt="image" src="https://github.com/user-attachments/assets/e7442287-4aad-461c-b163-021ed60861b7" />
+
+Continue toggling between holes and adding successively deeper cores to build your composite section / splice. Here is what mine looks like:
+
+<img width="1837" height="1002" alt="image" src="https://github.com/user-attachments/assets/ab1ea116-f5ab-47d3-a8a9-2d4b79b58699" />
+
+When you are finished, hit the "Finalize" button. This will pass your affine shifts to Core Composite, which will automatically assign all of the data in the builder object to the composite depth scale, include the automated alignment of off-splice materials to the main composite section / splice. We can then review our results in the "ReviewGUI".
