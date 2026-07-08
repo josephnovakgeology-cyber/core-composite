@@ -7,7 +7,7 @@ A demo version of the script that implements CorePhotoDigitizer is included in t
 The script needs to be in the same folder as the .pdfs of the core photos and requires a supporting file that includes the core section summary from the preliminary report. 
 
 ### Required Files and how to find them in the Janus Database
-**The required files for to use CorePhotoDigitizer are:**
+**The required files to use CorePhotoDigitizer are:**
 
 **1). core photo .pdf files**
 
