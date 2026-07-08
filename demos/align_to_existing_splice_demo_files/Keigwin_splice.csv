@@ -1,0 +1,6 @@
+﻿Site,Hole,Core,Shift,Status,Top [mbsf],Bot [mbsf],Depth comp top [mcd],Depth comp bot [mcd]
+883,D,1H,0,On-splice,0,7.4,0,7.4
+883,C,2H,1.55,On-splice,5.85,7.45,7.4,9
+883,D,2H,1.5,On-splice,7.5,17.18,9,18.68
+883,A,1H,14.65,On-splice,4.03,9.3,18.68,23.95
+883,B,3H,2.05,On-splice,21.9,27.01,23.95,29.06
