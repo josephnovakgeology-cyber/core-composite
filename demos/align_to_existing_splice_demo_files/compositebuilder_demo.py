@@ -35,7 +35,7 @@ builder.add_hole(hole_C)
 builder.add_hole(hole_D)
 
 # Apply the published splice
-load_external_affine(builder, "Keigwin_splice.csv")
+load_external_affine(builder, "Keigwin_splice.csv") #this splice is from Keigwin (1995), doi:10.2973/odp.proc.sr.145.116.1995
 
 # Run the automated alignment
 builder.optimize_off_splice(proxy='auto', str_range=(0.6, 1.05))
