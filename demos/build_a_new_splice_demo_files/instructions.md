@@ -39,3 +39,11 @@ Spyder will open to the last script you were working on. Use the navigation butt
 
 Once you have the demo script open and the working directory set, spyder should look like this:
 
+<img width="1900" height="1126" alt="image" src="https://github.com/user-attachments/assets/15e3cab4-d68c-4104-90b0-247ae6dab478" />
+
+If you are following the demo, then the file is already set up to run. Let's walk through what each of the lines of code in this script do so that you can modify it later to work on different drill sites. 
+
+The imports [lines 8-14] do not need to be changed. Line 12 makes the plots appear as popups. I recommend leaving it alone, even if spyder flags an error on that line. It works. Why? Not sure.
+
+IF you are working with your own dataset, the first thing you may need to change are the types of physical properties data you are working with. Here, physical properties data are called "proxies" because proxies is a shorter word than "physical properties data." The "target_proxies" variable reflects the data types that you want plotted in SpliceBuilderGUI. The string (the text within the quotation marks inside the brackets) needs to match at least part of the column header name in one of your data files. You can plot any type of data you would like, although there could be some plotting oddities that arise if you use a data type other than the three I in this demo (these are the only types of data I tested). If you find a plotting bug, please leave a comment on the GitHub page or contact me via email (my email as of 7/8/2026 is: joseph_novak@brown.edu; since I am a postdoc, my email address will likely change in the future, so take a look at a recent paper of mine to find my up to date contact). 
+
