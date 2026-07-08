@@ -86,6 +86,13 @@ The black dashed line shows where the tiepoint is attached to the composite sect
 
 Continue toggling between holes and adding successively deeper cores to build your composite section / splice. Here is what mine looks like:
 
-<img width="1837" height="1002" alt="image" src="https://github.com/user-attachments/assets/ab1ea116-f5ab-47d3-a8a9-2d4b79b58699" />
+<img width="1862" height="1036" alt="image" src="https://github.com/user-attachments/assets/fae49060-358c-46d3-9b25-84ff96f5ffae" />
 
 When you are finished, hit the "Finalize" button. This will pass your affine shifts to Core Composite, which will automatically assign all of the data in the builder object to the composite depth scale, include the automated alignment of off-splice materials to the main composite section / splice. We can then review our results in the "ReviewGUI".
+
+<img width="1841" height="1040" alt="image" src="https://github.com/user-attachments/assets/3d460a4e-30ce-4c63-b538-8fbeb2ed598d" />
+
+Here, the composite section is plotted at the bottom. The data above it are from each of the parallel boreholes. The blue data are the values that compose the composite section / splice, and the red data are the off-splice data. The program attempts to align the off-splice data with the composite, which you can verify in this GUI. If you are satisified with the alignment, hit "Export and Save." 
+
+Further instructions on how to refine these off-splice alignments can be found in the "Align to Existing Splice" demo. 
+
