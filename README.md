@@ -10,6 +10,6 @@ of scientific drilling materials:
 This version of core_composite is set up to work with data files as they are formatted on the 
 DSDP / ODP Janus database or the IODP LIMS database.
 
-The installation and user guides are in the docs folder. I hope this code is useful to you. Happy splicing!
+The installation and user guides are in the docs folder. I hope this code helpful to you. Happy splicing!
 
 - J.B.
