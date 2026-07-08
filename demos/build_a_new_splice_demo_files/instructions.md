@@ -96,3 +96,5 @@ Here, the composite section is plotted at the bottom. The data above it are from
 
 Further instructions on how to refine these off-splice alignments can be found in the "Align to Existing Splice" demo. 
 
+## Placing subsamples onto the composite depth (MCD) scale
+So now you have a splice, how do you place your samples onto that depth scale? Included in this folder is a short script that calls a function for this in Core Composite. Go ahead and download **"map_subsamples_to_mcd_demo.py"** - this file will use the composite depth scale we just made to assign calcium carbonate wt. % measurements from ODP 887 to the composite depth scale. 
