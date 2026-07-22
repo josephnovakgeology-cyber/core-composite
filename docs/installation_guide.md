@@ -38,7 +38,7 @@ We will install Core Composite within a dedicated Python virtual environment alo
 1. Open your computer's application search bar. 
 2. If you are on Windows, search for and open **Anaconda Prompt**. If you are on a Mac, search for and open **Terminal**.
 3. Type the following command exactly as written and press **Enter**: 
-   `conda create --name core_composite python=3.11 spyder -y`
+   `conda create --name core_composite -c conda-forge python=3.11 spyder pyqt -y`
 4. Wait a few moments for it to finish setting up the sandbox. 
 5. Next, "enter" the sandbox by typing this command and pressing **Enter**: 
    `conda activate core_composite`
