@@ -31,13 +31,14 @@ To run Core Composite, you need Python installed on your computer. The safest an
 1. Go to [Anaconda's official website](https://www.anaconda.com/download) and download the installer for your operating system (Windows or Mac).
 2. Run the installer and click "Next" through the default setup options.
 
-#### Step 3: Create a Python Environment
-We will install Core Composite within a dedicated Python virtual environment. This avoids any potential future conflicts with libraries you install for later projects. 
+#### Step 3: Create a Python Environment and install Spyder
+We will install Core Composite within a dedicated Python virtual environment alongside spyder. Spyder is a user-friendly application where you can read, edit, and run Python scripts. 
+ This avoids any potential future conflicts with libraries you install for later projects. 
 
 1. Open your computer's application search bar. 
 2. If you are on Windows, search for and open **Anaconda Prompt**. If you are on a Mac, search for and open **Terminal**.
 3. Type the following command exactly as written and press **Enter**: 
-   `conda create --name core_composite python=3.10 -y`
+   `conda create --name core_composite python=3.11 spyder -y`
 4. Wait a few moments for it to finish setting up the sandbox. 
 5. Next, "enter" the sandbox by typing this command and pressing **Enter**: 
    `conda activate core_composite`
@@ -60,10 +61,7 @@ Mac / Linux: python3 -m pip install .
 
 Your screen will print out a lot of text as it automatically downloads all the necessary background tools. Once it stops, Core Composite is installed and ready to use.
 
-#### Step 5: Install and Open Spyder
-Lastly, we will need to install Spyder so that we have an easy way to run code that uses Core Composite. Spyder is a user-friendly application where you can read, edit, and run Python scripts. 
+#### Step 5: Open Spyder
+Lastly, we will need to open Spyder to start running core_composite. Spyder is a user-friendly application where you can read, edit, and run Python scripts. 
 
-1. While still in your `(core_composite)` terminal, type the following command and press **Enter**:
-   `conda install spyder -y`
-2. Wait a minute or two for Spyder to download and install into your sandbox.
-3. Once it is finished, simply type `spyder` and press **Enter**.
+1. Type `spyder` and press **Enter**.
