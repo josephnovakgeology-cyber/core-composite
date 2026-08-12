@@ -102,8 +102,11 @@ So now you have a splice, how do you place your samples onto that depth scale? I
 Looking at this script, you will notice that it is very similar to the previous demo. That is because the mapping function requires us to define the builder object. If you are working on your own core, make sure that lines 10-32 match what you did to put together the builder object in your work. Then, at line 35, load in the affine table that you made last time. 
 
 You are now ready to call the function **"map_subsamples_to_mcd"** - this function requires three arguments:
+
 **1). the builder object**
 
 **2). the input file name, as a string**
 
 **3). the output file name, as a string**
+
+It is very important to make sure that your .csv file is formatted exactly the same way as the example. Otherwise, the function will fail to map your subsamples to the MCD depth scale.
