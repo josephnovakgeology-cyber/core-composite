@@ -666,9 +666,13 @@ class SpliceBuilderGUI:
                     if sec.is_locked:
                         vis_top = sec.drilled_top + sec.affine_shift
                         vis_bot = (sec.drilled_bottom - sec.drilled_top) * sec.stretch_factor + sec.drilled_top + sec.affine_shift
+                        
                         if vis_top <= splice_mcd <= vis_bot:
                             core.apply_splice_cut(splice_mcd)
                             break
+                        elif vis_top > splice_mcd:
+                            # Unlock lower sections superseded by the new tie point
+                            sec.is_locked = False
 
         cand_hole = self.builder.holes[self.candidate_hole]
         best_core = None
@@ -711,8 +715,7 @@ class SpliceBuilderGUI:
             for c2 in cand_hole.cores:
                 if c2.drilled_top >= original_drilled_top:
                     for s2 in c2.sections:
-                        if not s2.is_locked:
-                            s2.affine_shift += delta_shift
+                        s2.affine_shift += delta_shift
                             
             best_core.apply_candidate_cut(raw_click_depth)
         else:

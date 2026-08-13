@@ -134,7 +134,7 @@ class Core:
         self.scaled_data = self.data.copy()
         
         # Equation 11 from the manuscript
-        self.scaled_data['Base_Scaled_Depth'] = self.drilled_top + ((self.data['Depth'] - self.data['Depth'].min()) * rf)
+        self.scaled_data['Base_Scaled_Depth'] = self.drilled_top + ((self.data['Depth'] - self.drilled_top) * rf)
         
         # making the chunks
         min_d = self.scaled_data['Base_Scaled_Depth'].min()
@@ -165,61 +165,91 @@ class Core:
         ODP / IODP convention.
         
         """
+        new_sections = []
         for sec in self.sections:
-            if not sec.is_locked: continue
-            
-            # Calculate the visual boundaries of this section for the GUI
             vis_top = sec.drilled_top + sec.affine_shift
             vis_bot = (sec.drilled_bottom - sec.drilled_top) * sec.stretch_factor + sec.drilled_top + sec.affine_shift
             
-            # If the cut falls inside this section
-            if vis_top <= splice_mcd <= vis_bot:
-                # Convert MCD back to Depth (mbsf)
+            if vis_bot <= splice_mcd:
+                # patch 8/13/2026
+                new_sections.append(sec)
+                
+            elif vis_top >= splice_mcd:
+                sec.is_locked = False
+                new_sections.append(sec)
+                
+            else:
                 relative_mcd = splice_mcd - sec.affine_shift - sec.drilled_top
                 raw_cut_depth = sec.drilled_top + (relative_mcd / sec.stretch_factor)
                 
-                # Filter the dataframe to only keep data above the cut
-                sec.scaled_data = sec.scaled_data[sec.scaled_data['Base_Scaled_Depth'] <= raw_cut_depth].copy()
+                top_data = sec.scaled_data[sec.scaled_data['Base_Scaled_Depth'] <= raw_cut_depth].copy()
+                bot_data = sec.scaled_data[sec.scaled_data['Base_Scaled_Depth'] > raw_cut_depth].copy()
                 
-                # update the chunk boundaries
-                sec.drilled_bottom = raw_cut_depth
-                
-                # any chunks in the core below this are unlocked and will be aligned by CompositeBuilder later
-                unlock_rest = False
-                for s in self.sections:
-                    if unlock_rest:
-                        s.is_locked = False
-                    if s == sec:
-                        unlock_rest = True
-                break
+                if not top_data.empty:
+                    top_sec = Section(sec.hole_name, sec.core_id, f"{sec.section_id}a", top_data, sec.proxies, is_locked=sec.is_locked)
+                    top_sec.affine_shift = sec.affine_shift
+                    top_sec.stretch_factor = sec.stretch_factor
+                    # patch 8/13/2026
+                    top_sec.drilled_top = sec.drilled_top
+                    top_sec.drilled_bottom = raw_cut_depth
+                    new_sections.append(top_sec)
+                    
+                if not bot_data.empty:
+                    bot_sec = Section(sec.hole_name, sec.core_id, f"{sec.section_id}b", bot_data, sec.proxies, is_locked=False)
+                    bot_sec.affine_shift = sec.affine_shift
+                    bot_sec.stretch_factor = sec.stretch_factor
+                    # patch 8/13/2026
+                    bot_sec.drilled_top = raw_cut_depth
+                    bot_sec.drilled_bottom = sec.drilled_bottom
+                    new_sections.append(bot_sec)
+                    
+        self.sections = new_sections
+
+    def set_affine_shift(self, shift_val):
+        """Enforces a single, uniform affine shift across all sections in this core."""
+        for sec in self.sections:
+            sec.affine_shift = shift_val
 
     def apply_candidate_cut(self, raw_click_depth):
         """
-        Cuts the "candidate core" so it begins at raw_click_depth.
-        Everything above this depth is labeled as off-splice and ignored; 
-        everything below is locked into the splice.
-        
-        Here, a "candidate core" refers to the core that is about to be added to the splice. 
-        It will then become the "master core" that a subsequent candidate core is splice onto.
+        Cuts the candidate core at raw_click_depth.
+        Data above raw_click_depth remains off-splice (is_locked = False).
+        Data below raw_click_depth becomes on-splice (is_locked = True).
         """
+        new_sections = []
         for sec in self.sections:
-            # If the cut falls inside this section
-            if sec.drilled_top <= raw_click_depth <= sec.drilled_bottom:
+            if sec.drilled_bottom <= raw_click_depth:
+                sec.is_locked = False
+                new_sections.append(sec)
                 
-                # Only keep data below the cut
-                sec.scaled_data = sec.scaled_data[sec.scaled_data['Base_Scaled_Depth'] >= raw_click_depth].copy()
+            elif sec.drilled_top >= raw_click_depth:
+                sec.is_locked = True
+                new_sections.append(sec)
                 
-                # Update the section boundaries to place the section onto the MCD scale
-                sec.drilled_top = raw_click_depth
+            else:
+                # patch 8/13/2026
+                top_data = sec.scaled_data[sec.scaled_data['Base_Scaled_Depth'] < raw_click_depth].copy()
+                bot_data = sec.scaled_data[sec.scaled_data['Base_Scaled_Depth'] >= raw_click_depth].copy()
                 
-                # Mark this section and all below it as "on-splice" until a new tiepoint is placed
-                lock_rest = False
-                for s in self.sections:
-                    if s == sec:
-                        lock_rest = True
-                    if lock_rest:
-                        s.is_locked = True
-                break
+                if not top_data.empty:
+                    top_sec = Section(sec.hole_name, sec.core_id, f"{sec.section_id}a", top_data, sec.proxies, is_locked=False)
+                    top_sec.affine_shift = sec.affine_shift
+                    top_sec.stretch_factor = sec.stretch_factor
+                    # patch 8/13/2026
+                    top_sec.drilled_top = sec.drilled_top
+                    top_sec.drilled_bottom = raw_click_depth
+                    new_sections.append(top_sec)
+                    
+                if not bot_data.empty:
+                    bot_sec = Section(sec.hole_name, sec.core_id, f"{sec.section_id}b", bot_data, sec.proxies, is_locked=True)
+                    bot_sec.affine_shift = sec.affine_shift
+                    bot_sec.stretch_factor = sec.stretch_factor
+                    # patch 8/13/2026
+                    bot_sec.drilled_top = raw_click_depth
+                    bot_sec.drilled_bottom = sec.drilled_bottom
+                    new_sections.append(bot_sec)
+                    
+        self.sections = new_sections
 
 class Hole:
     def __init__(self, hole_name):
@@ -237,7 +267,7 @@ class Hole:
         for c in self.cores:
             for s in c.sections:
                 df = s.scaled_data.copy()
-                base_top = df['Base_Scaled_Depth'].min()
+                base_top = s.drilled_top
                 shifted_top = base_top + s.affine_shift
                 df['MCD'] = shifted_top + (df['Base_Scaled_Depth'] - base_top) * s.stretch_factor
                 df['Is_Locked'] = s.is_locked
