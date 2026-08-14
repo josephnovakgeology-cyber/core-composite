@@ -156,8 +156,8 @@ def load_external_affine(builder, csv_path):
                     if not df_top.empty:
                         sec_top = copy.deepcopy(sec)
                         sec_top.scaled_data = df_top
-                        sec_top.drilled_top = sec.drilled_top
-                        sec_top.drilled_bottom = raw_top
+                        sec_top.drilled_top = df_top['Base_Scaled_Depth'].min()
+                        sec_top.drilled_bottom = df_top['Base_Scaled_Depth'].max()
                         sec_top.affine_shift = shift_val
                         sec_top.stretch_factor = stretch_val
                         sec_top.is_locked = False
@@ -167,20 +167,32 @@ def load_external_affine(builder, csv_path):
                     if not df_splice.empty:
                         sec_splice = copy.deepcopy(sec)
                         sec_splice.scaled_data = df_splice
-                        # Use max/min to handle -np.inf and np.inf fallbacks safely
-                        sec_splice.drilled_top = max(sec.drilled_top, raw_top)
-                        sec_splice.drilled_bottom = min(sec.drilled_bottom, raw_bot)
+                        sec_splice.drilled_top = df_splice['Base_Scaled_Depth'].min()
+                        sec_splice.drilled_bottom = df_splice['Base_Scaled_Depth'].max()
                         sec_splice.affine_shift = shift_val
                         sec_splice.stretch_factor = stretch_val
                         sec_splice.is_locked = True
                         new_sections.append(sec_splice)
+
+                        # updated code 8/14/2026 is here until beginning of next if statement
+                        calc_top_mcd = top_mcd if (top_mcd_col and not pd.isna(row[top_mcd_col])) else (sec_splice.drilled_top - sec.drilled_top) * stretch_val + sec.drilled_top + shift_val
+                        calc_bot_mcd = bot_mcd if (bot_mcd_col and not pd.isna(row[bot_mcd_col])) else (sec_splice.drilled_bottom - sec.drilled_top) * stretch_val + sec.drilled_top + shift_val
+                        
+                        builder.splice.append_tie(
+                            top_mcd=calc_top_mcd,
+                            bot_mcd=calc_bot_mcd,
+                            hole_name=target_hole.hole_name,
+                            core_id=core.core_id,
+                            top_drilled=sec_splice.drilled_top,
+                            bot_drilled=sec_splice.drilled_bottom
+                        )
                         
                     # Save the bottom off-splice tail
                     if not df_bot.empty:
                         sec_bot = copy.deepcopy(sec)
                         sec_bot.scaled_data = df_bot
-                        sec_bot.drilled_top = raw_bot
-                        sec_bot.drilled_bottom = sec.drilled_bottom
+                        sec_bot.drilled_top = df_bot['Base_Scaled_Depth'].min()
+                        sec_bot.drilled_bottom = df_bot['Base_Scaled_Depth'].max()
                         sec_bot.affine_shift = shift_val
                         sec_bot.stretch_factor = stretch_val
                         sec_bot.is_locked = False
@@ -198,22 +210,27 @@ def export_affine_table(builder, output_filename="Master_Final_Affine_Table.csv"
     """
     Exports the final affine shift, stretch, and lock status for every section 
     in the composite builder into a .csv file.
-    This captures the final state after all automated and manual tweaks.
-    """
     
-    print(f" Exporting Final Affine/Splice Table")
+    Preserves exact legacy header formats (MCD / mbsf) for round-trip compatibility
+    with load_external_affine().
+    """
+    print("Exporting Final Affine/Splice Table...")
     records = []
     
     for h_name, hole in builder.holes.items():
         for core in hole.cores:
             for sec in core.sections:
-                # Calculate MCD bounds
+                # Calculate MCD bounds matching the GUI cut and stretch math
                 top_mcd = sec.drilled_top + sec.affine_shift
                 bot_mcd = (sec.drilled_bottom - sec.drilled_top) * sec.stretch_factor + sec.drilled_top + sec.affine_shift
                 
+                # Safely retrieve IDs whether attached to sec or parent objects
+                sec_hole = getattr(sec, 'hole_name', h_name)
+                sec_core = getattr(core, 'core_id', getattr(sec, 'core_id', ''))
+                
                 records.append({
-                    'Hole': sec.hole_name,
-                    'Core': sec.core_id,
+                    'Hole': sec_hole,
+                    'Core': sec_core,
                     'Section': sec.section_id,
                     'Top_Drilled_mbsf': round(sec.drilled_top, 3),
                     'Bot_Drilled_mbsf': round(sec.drilled_bottom, 3),
@@ -404,27 +421,22 @@ def map_subsamples_to_mcd(builder, csv_path, output_filename="Mapped_Subsamples.
         
         # Fallback Section matching
         if not target_sec:
+            for s_obj in target_core.sections:
+                if s_obj.drilled_top <= raw_depth <= s_obj.drilled_bottom:
+                    target_sec = s_obj
+                    break
+            
+            if not target_sec and target_core.sections:
+                target_sec = target_core.sections[0]
+                
+        if not target_sec:
             print(f"Row {idx} [SECTION MISMATCH]: Could not resolve section for Core '{raw_core}' at depth {raw_depth}.")
             mcd_values.append(np.nan)
             continue
             
-        if not target_core.data.empty:
-            raw_min = target_core.data['Depth'].min()
-            raw_max = target_core.data['Depth'].max()
-            recovered_length = raw_max - raw_min
-            rf = min(1.0, target_core.drilled_length / recovered_length) if recovered_length > 0 else 1.0
-        else:
-            raw_min = 0.0
-            rf = 1.0
-            
-        # Subsample depth to Base Scaled Depth (Depth mbsfc)
-        base_scaled_depth = target_core.drilled_top + ((raw_depth - target_core.drilled_top) * rf)
-        
-        # Apply splice 
+        # Calculate MCD for each subsample
         st = getattr(target_sec, 'stretch_factor', 1.0)
-        shift = getattr(target_sec, 'affine_shift', 0.0)
-        
-        mcd = (base_scaled_depth - target_sec.drilled_top) * st + target_sec.drilled_top + shift
+        mcd = (raw_depth - target_sec.drilled_top) * st + target_sec.drilled_top + target_sec.affine_shift
         mcd_values.append(mcd)
         
     df['Depth (mcd)'] = mcd_values
@@ -451,7 +463,7 @@ def export_project_data(builder, active_holes, all_proxies):
     affine_data = []
     
     for h_name, hole in builder.holes.items():
-        
+        # Only export affine data for holes active in the GUI
         if h_name not in active_holes:
             continue
             
@@ -483,109 +495,84 @@ def export_project_data(builder, active_holes, all_proxies):
         else:
             print("  No splice intervals found to export.")
 
-    
+    # Export physical properties data aligned to composite depth scale
+    # Loop through every data type (proxy)
     for proxy in all_proxies:
+        master_splice_dfs = []
         
+        # Loop through every hole
         for h_name, hole in builder.holes.items():
+            
+            # Skip holes that are turned off in the UI
             if h_name not in active_holes:
                 continue
             
             hole_dfs = []
+            
             for core in hole.cores:
-                is_locked = any(getattr(sec, 'is_locked', False) for sec in core.sections)
+                
+                # Skip cores that aren't tied into the main splice
+                is_locked = any(sec.is_locked for sec in core.sections)
                 has_custom_shift = any(getattr(sec, 'affine_shift', 0.0) != 0.0 for sec in core.sections)
                 if not (is_locked or has_custom_shift):
                     continue
                     
                 for sec in core.sections:
-                    if sec.scaled_data is None or proxy not in sec.scaled_data.columns:
+                    if proxy not in sec.scaled_data.columns:
                         continue
                         
-                    if 'Base_Scaled_Depth' not in sec.scaled_data.columns:
-                        continue
-
+                    # Grab valid data for this proxy
                     df_clean = sec.scaled_data.dropna(subset=[proxy]).copy()
                     if df_clean.empty:
                         continue
                         
+                    # Run the final mathematical offsets for MCD
                     mbsf = df_clean['Base_Scaled_Depth']
-                    stretch = getattr(sec, 'stretch_factor', 1.0)
-                    shift = getattr(sec, 'affine_shift', 0.0)
+                    mcd = (mbsf - sec.drilled_top) * sec.stretch_factor + sec.drilled_top + sec.affine_shift
                     
-                    df_clean['Depth (mcd)'] = (mbsf - sec.drilled_top) * stretch + sec.drilled_top + shift
-                    df_clean['Status'] = 'on-splice' if getattr(sec, 'is_locked', False) else 'off-splice'
+                    # only add the specific calculated columns
+                    df_clean['Depth (mcd)'] = mcd
+                    df_clean['Status'] = 'on-splice' if sec.is_locked else 'off-splice'
+                    
                     df_clean['Hole'] = h_name
                     df_clean['Core'] = core.core_id
                     df_clean['Section'] = sec.section_id
                     
+                    # Add this dataframe block to our hole export list
                     hole_dfs.append(df_clean)
                     
+                    # If it's locked, it belongs in the Master Splice export too
+                    if sec.is_locked:
+                        ms_df = df_clean.copy()
+                        ms_df.drop(columns=['Status'], inplace=True, errors='ignore')
+                        master_splice_dfs.append(ms_df)
+                            
+            # Save the specific Hole Data
             if hole_dfs:
                 df_hole = pd.concat(hole_dfs, ignore_index=True)
                 df_hole.sort_values(by='Depth (mcd)', inplace=True)
+                
+                # Drop internal calculation columns generated by your loader script
                 df_hole.drop(columns=['Base_Scaled_Depth', 'Virtual_Section', 'Core_Clean'], inplace=True, errors='ignore')
                 
                 safe_proxy = re.sub(r'[\\/*?:"<>|]', "", proxy)
                 filename_hole = f"Export_Hole_{h_name}_{safe_proxy}.csv"
                 df_hole.to_csv(filename_hole, index=False)
-                print(f"   -> Saved Hole Data: {filename_hole}")
-
-        
-        master_splice_dfs = []
-
-        if hasattr(builder, 'splice') and builder.splice and getattr(builder.splice, 'intervals', None):
-            for interval in builder.splice.intervals:
-                # Support both dictionary and object interval records
-                h_name = interval.get('Hole') if isinstance(interval, dict) else getattr(interval, 'Hole', None)
-                core_id = interval.get('Core') if isinstance(interval, dict) else getattr(interval, 'Core', None)
-                sec_id = interval.get('Section') if isinstance(interval, dict) else getattr(interval, 'Section', None)
+                print(f"  -> Saved: {filename_hole}")
                 
-                # Fetch top and bottom depth boundaries for this specific splice interval
-                top_mcd = interval.get('Top_MCD') or interval.get('Top_Depth_MCD') if isinstance(interval, dict) else getattr(interval, 'top_mcd', None)
-                bot_mcd = interval.get('Bottom_MCD') or interval.get('Bottom_Depth_MCD') if isinstance(interval, dict) else getattr(interval, 'bottom_mcd', None)
-
-                hole = builder.holes.get(h_name)
-                if not hole:
-                    continue
-                
-                core = next((c for c in hole.cores if str(c.core_id) == str(core_id)), None)
-                if not core:
-                    continue
-                    
-                sec = next((s for s in core.sections if str(s.section_id) == str(sec_id)), None)
-                if not sec or sec.scaled_data is None or proxy not in sec.scaled_data.columns:
-                    continue
-                
-                df_clean = sec.scaled_data.dropna(subset=[proxy]).copy()
-                if df_clean.empty or 'Base_Scaled_Depth' not in df_clean.columns:
-                    continue
-
-                mbsf = df_clean['Base_Scaled_Depth']
-                stretch = getattr(sec, 'stretch_factor', 1.0)
-                shift = getattr(sec, 'affine_shift', 0.0)
-                
-                df_clean['Depth (mcd)'] = (mbsf - sec.drilled_top) * stretch + sec.drilled_top + shift
-                df_clean['Hole'] = h_name
-                df_clean['Core'] = core_id
-                df_clean['Section'] = sec_id
-
-                # CLIP DATA: Only keep points falling strictly within the splice interval bounds
-                if top_mcd is not None and bot_mcd is not None:
-                    df_clean = df_clean[(df_clean['Depth (mcd)'] >= top_mcd) & (df_clean['Depth (mcd)'] <= bot_mcd)]
-
-                if not df_clean.empty:
-                    master_splice_dfs.append(df_clean)
-
+        # Save the Master Splice Data
         if master_splice_dfs:
             df_ms = pd.concat(master_splice_dfs, ignore_index=True)
             df_ms.sort_values(by='Depth (mcd)', inplace=True)
+            
+            # Same internal column cleanup for the Master Splice
             df_ms.drop(columns=['Base_Scaled_Depth', 'Virtual_Section', 'Core_Clean'], inplace=True, errors='ignore')
             
             safe_proxy = re.sub(r'[\\/*?:"<>|]', "", proxy)
             filename_ms = f"Export_MasterSplice_{safe_proxy}.csv"
             df_ms.to_csv(filename_ms, index=False)
-            print(f"   -> Saved Master Splice: {filename_ms}")
-
+            print(f"  -> Saved: {filename_ms}")
+            
     print("Export Complete. Check your directory.")
     
     

@@ -395,7 +395,7 @@ class ReviewGUI:
 
             if hasattr(self, 'check_align') and self.check_align.get_status()[0]:
                 print("Running Auto-Realign around the new nudged position...")
-                # HANDOFF TO BUILDER!
+                # fixed 8/14/2026
                 self.builder.snap_floating_core_to_anchor(
                     core=core_to_shift,
                     manual_anchor_shift=new_anchor_shift,
@@ -414,7 +414,7 @@ class ReviewGUI:
         export_project_data(self.builder, self.active_holes, self.all_proxies)
         
 class SpliceBuilderGUI:
-    def __init__(self, builder, mudline_hole, proxy= None):
+    def __init__(self, builder, mudline_hole, proxy=None):
         """
         The GUI for building new splices / composite sections.
         """
@@ -442,8 +442,10 @@ class SpliceBuilderGUI:
             for sec in mudline_core.sections:
                 sec.is_locked = True
                 
+        self.current_tie_top_mcd = 0.0
+        
         self.fig, self.ax = plt.subplots(figsize=(15, 8))
-        self.fig.subplots_adjust(left=0.15, bottom=0.25) # Leaves room for buttons
+        self.fig.subplots_adjust(left=0.15, bottom=0.25)
         self.fig.canvas.manager.set_window_title('Splice Builder')
         
         ax_radio_proxy = plt.axes([0.02, 0.65, 0.1, 0.15])
@@ -457,7 +459,7 @@ class SpliceBuilderGUI:
         self.radio_hole = RadioButtons(ax_radio_hole, list(self.builder.holes.keys()))
         self.radio_hole.on_clicked(self.switch_candidate)
         
-        # Adjusted Depth Window Controls (TextBoxes)
+        # Depth Controls
         ax_min = plt.axes([0.25, 0.05, 0.08, 0.05])
         self.txt_min = TextBox(ax_min, 'Min: ', initial='')
         self.txt_min.on_submit(self.submit_min)
@@ -488,7 +490,6 @@ class SpliceBuilderGUI:
         self.update_plots()
         plt.show(block=True)
 
-    # Callbacks for the TextBoxes
     def submit_min(self, text):
         try:
             self.view_min = float(text) if text.strip() != '' else None
@@ -519,24 +520,6 @@ class SpliceBuilderGUI:
         self.line_splice = None
         self.line_cand = None
 
-    def get_cumulative_growth(self):
-        """
-        Helper function for applying the affine shifts down each hole.
-        """
-        cumulative_growth = 0.0
-        locked_sections = []
-        for h_name, hole in self.builder.holes.items():
-            for core in hole.cores:
-                for sec in core.sections:
-                    if sec.is_locked:
-                        locked_sections.append(sec)
-        if locked_sections:
-            locked_sections.sort(key=lambda x: x.scaled_data['Base_Scaled_Depth'].max())
-            deepest_locked = locked_sections[-1]
-            if hasattr(deepest_locked, 'affine_shift'):
-                cumulative_growth = deepest_locked.affine_shift
-        return cumulative_growth
-
     def update_plots(self):
         self.ax.clear()
         
@@ -545,8 +528,26 @@ class SpliceBuilderGUI:
         self.ax.set_xlabel("MCD (m)")
         self.ax.grid(True, linestyle='--', alpha=0.5)
 
-        # Calculate 1.5x Y-offset
-        splice_df = self.builder.get_splice_dataframe(self.proxy)
+        # Build Master Splice dynamically from currently locked sections
+        locked_chunks = []
+        for h_name, hole in self.builder.holes.items():
+            for core in hole.cores:
+                for sec in core.sections:
+                    if sec.is_locked and self.proxy in sec.scaled_data.columns:
+                        clean = sec.scaled_data.dropna(subset=[self.proxy]).copy()
+                        # Strictly filter within section's active cut bounds
+                        clean = clean[(clean['Base_Scaled_Depth'] >= sec.drilled_top) & 
+                                      (clean['Base_Scaled_Depth'] <= sec.drilled_bottom)]
+                        if not clean.empty:
+                            mcd = (clean['Base_Scaled_Depth'] - sec.drilled_top) * sec.stretch_factor + sec.drilled_top + sec.affine_shift
+                            locked_chunks.append(pd.DataFrame({'MCD': mcd, self.proxy: clean[self.proxy]}))
+
+        if locked_chunks:
+            splice_df = pd.concat(locked_chunks, ignore_index=True).sort_values('MCD')
+        else:
+            splice_df = pd.DataFrame(columns=['MCD', self.proxy])
+
+        # Calculate Y-offset
         master_range = 0
         if not splice_df.empty:
             master_range = splice_df[self.proxy].max() - splice_df[self.proxy].min()
@@ -568,12 +569,11 @@ class SpliceBuilderGUI:
         
         self.y_offset = 1.5 * self.proxy_range 
 
-        # Plot Master Splice
+        # Plot Master Splice (black line)
         if not splice_df.empty:
             self.ax.plot(splice_df['MCD'], splice_df[self.proxy], color='black', linewidth=1.5, label='Master Splice')
 
-        # Plot Candidate Hole
-        # Palette: Orange, Sky Blue, Bluish Green, Blue, Vermillion, Reddish Purple
+        # Plot Candidate Hole cores below offset
         colors = itertools.cycle(['#E69F00', '#56B4E9', '#009E73', '#0072B2', '#D55E00', '#CC79A7'])
         
         for core in cand_hole.cores:
@@ -586,6 +586,8 @@ class SpliceBuilderGUI:
                 if self.proxy not in sec.scaled_data.columns: continue
                 
                 clean = sec.scaled_data.dropna(subset=[self.proxy])
+                clean = clean[(clean['Base_Scaled_Depth'] >= sec.drilled_top) & 
+                              (clean['Base_Scaled_Depth'] <= sec.drilled_bottom)]
                 if clean.empty: continue
                 
                 mcd = (clean['Base_Scaled_Depth'] - sec.drilled_top) * sec.stretch_factor + sec.drilled_top + sec.affine_shift
@@ -602,7 +604,7 @@ class SpliceBuilderGUI:
                              f"C{core.core_id}", fontsize=10, color=color, fontweight='bold',
                              bbox=dict(facecolor='white', edgecolor='none', alpha=0.7, pad=1.5))
 
-        # Draw Clicks
+        # Draw Click Indicators
         if getattr(self, 'click_splice', None):
             self.ax.axvline(self.click_splice[0], color='black', linestyle='--', alpha=0.7)
         if getattr(self, 'click_cand', None):
@@ -610,9 +612,9 @@ class SpliceBuilderGUI:
             
         self.ax.legend(loc='upper right')
 
-        # Apply Custom Depth Limits if Provided
+        # Apply Depth Limits
         if self.view_min is not None and self.view_max is not None:
-            if self.view_min < self.view_max: # Prevent crash if user types min > max
+            if self.view_min < self.view_max:
                 self.ax.set_xlim(self.view_min, self.view_max)
 
         self.fig.canvas.draw_idle()
@@ -641,9 +643,6 @@ class SpliceBuilderGUI:
             
         print("Undoing last action...")
         last_state = self.history.pop()
-        
-        #  Update the internal dictionary of the original builder object in-place
-        # This prevents the main script from losing the reference.
         self.builder.__dict__.update(copy.deepcopy(last_state).__dict__)
         
         self.clear_active_clicks()
@@ -660,6 +659,7 @@ class SpliceBuilderGUI:
         cand_depth = self.click_cand[0]
         cand_y = self.click_cand[1] 
         
+        master_tied = False
         for h_name, hole in self.builder.holes.items():
             for core in hole.cores:
                 for sec in core.sections:
@@ -668,11 +668,24 @@ class SpliceBuilderGUI:
                         vis_bot = (sec.drilled_bottom - sec.drilled_top) * sec.stretch_factor + sec.drilled_top + sec.affine_shift
                         
                         if vis_top <= splice_mcd <= vis_bot:
+                            relative_mcd = splice_mcd - sec.affine_shift - sec.drilled_top
+                            raw_cut_depth = sec.drilled_top + (relative_mcd / sec.stretch_factor)
+                            
+                            self.builder.splice.append_tie(
+                                top_mcd=getattr(self, 'current_tie_top_mcd', 0.0),
+                                bot_mcd=splice_mcd,
+                                hole_name=h_name,
+                                core_id=core.core_id,
+                                top_drilled=core.drilled_top, 
+                                bot_drilled=raw_cut_depth
+                            )
+                            
+                            self.current_tie_top_mcd = splice_mcd
                             core.apply_splice_cut(splice_mcd)
+                            master_tied = True
                             break
-                        elif vis_top > splice_mcd:
-                            # Unlock lower sections superseded by the new tie point
-                            sec.is_locked = False
+                if master_tied: break
+            if master_tied: break
 
         cand_hole = self.builder.holes[self.candidate_hole]
         best_core = None
@@ -715,7 +728,8 @@ class SpliceBuilderGUI:
             for c2 in cand_hole.cores:
                 if c2.drilled_top >= original_drilled_top:
                     for s2 in c2.sections:
-                        s2.affine_shift += delta_shift
+                        if not s2.is_locked:
+                            s2.affine_shift += delta_shift
                             
             best_core.apply_candidate_cut(raw_click_depth)
         else:
@@ -726,8 +740,31 @@ class SpliceBuilderGUI:
         self.fig.canvas.draw_idle()
         
     def finalize(self, event):
-        """
-        Closes the GUI window to allow the main script to proceed align off-splice core sections.
-        """
+        deepest_bot_mcd = 0.0
+        final_core = None
+        final_hole = None
+        final_bot_drilled = 0.0
+
+        for h_name, hole in self.builder.holes.items():
+            for core in hole.cores:
+                for sec in core.sections:
+                    if sec.is_locked:
+                        bot_mcd = (sec.drilled_bottom - sec.drilled_top) * sec.stretch_factor + sec.drilled_top + sec.affine_shift
+                        if bot_mcd > deepest_bot_mcd:
+                            deepest_bot_mcd = bot_mcd
+                            final_core = core
+                            final_hole = h_name
+                            final_bot_drilled = sec.drilled_bottom
+
+        if final_core:
+            self.builder.splice.append_tie(
+                top_mcd=getattr(self, 'current_tie_top_mcd', 0.0),
+                bot_mcd=deepest_bot_mcd,
+                hole_name=final_hole,
+                core_id=final_core.core_id,
+                top_drilled=final_core.drilled_top,
+                bot_drilled=final_bot_drilled
+            )
+
         print("Finalizing Composite. Proceeding to align off-splice core sections.")
         plt.close(self.fig)

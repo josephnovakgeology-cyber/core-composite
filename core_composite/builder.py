@@ -39,31 +39,63 @@ class CompositeBuilder:
         self.holes[hole.hole_name] = hole
         
     def get_splice_dataframe(self, proxy):
-        records = []
-    
-        for hole in self.holes.values():
-            for core in hole.cores:
-                for sec in core.sections:
-                    if sec.is_locked and proxy in sec.scaled_data.columns:
-                        clean = sec.scaled_data.dropna(subset=[proxy])
-                        if not clean.empty:
-                            st = getattr(sec, 'stretch_factor', 1.0)
-                            mcd = (clean['Base_Scaled_Depth'] - sec.drilled_top) * st + sec.drilled_top + sec.affine_shift
-                        
-                            temp_df = pd.DataFrame({'MCD': mcd, proxy: clean[proxy]})
-                            records.append(temp_df)
-                        
-        if not records:
-            return pd.DataFrame()
+        """
+        Compiles the target splice into a single DataFrame by strictly 
+        filtering each section against the tiepoint intervals recorded in SpliceRecord.
         
-        full_df = pd.concat(records, ignore_index=True).sort_values('MCD')
-    
-        # Deduplicate overlapping depth points across different holes
-        full_df = full_df.drop_duplicates(subset=['MCD'], keep='first')
-        return full_df
+        The output from this function is the clean target signal for off-splice alignment.
+        """
+        depths, vals = [], []
+        
+        # If no intervals exist, we cannot build a properly clipped target splice
+        if not self.splice.intervals:
+            print(f"Warning: No splice intervals found. Cannot build target splice for {proxy}.")
+            return pd.DataFrame()
+            
+        for tie in self.splice.intervals:
+            hole_name = tie['Hole']
+            core_id = str(tie['Core'])
+            top_mcd = tie['Top_MCD']
+            bot_mcd = tie['Bot_MCD']
+            
+            # Locate the specific hole and core for this tie interval
+            hole = self.holes.get(hole_name)
+            if not hole: 
+                continue
+                
+            for core in hole.cores:
+                if core.core_id != core_id: 
+                    continue
+                    
+                for sec in core.sections:
+                    # We process the section if it has the requested proxy data
+                    if proxy in sec.scaled_data.columns:
+                        clean = sec.scaled_data.dropna(subset=[proxy]).copy()
+                        if clean.empty: 
+                            continue
+                            
+                        # Calculate the MCD for this section
+                        mcd = (clean['Base_Scaled_Depth'] - sec.drilled_top) * sec.stretch_factor + sec.drilled_top + sec.affine_shift
+                        clean['MCD'] = mcd
+                        
+                        # Apply the filter based on the main splice tie intervals
+                        mask = (clean['MCD'] >= top_mcd) & (clean['MCD'] <= bot_mcd)
+                        filtered = clean[mask]
+                        
+                        if not filtered.empty:
+                            depths.extend(filtered['MCD'].values)
+                            vals.extend(filtered[proxy].values)
+                            
+        if not depths:
+            return pd.DataFrame()
+            
+        # Assemble, sort, and ensure no duplicate MCDs exist at exact tie boundaries
+        # This protects the interp1d function from crashing during the grid search
+        df = pd.DataFrame({'MCD': depths, proxy: vals}).sort_values('MCD')
+        return df.drop_duplicates(subset=['MCD']).reset_index(drop=True)
                    
         
-    def optimize_off_splice(self, proxy='auto', str_range=(0.70, 1.05), str_step=0.01, stretch_penalty=0.1, plot_results=True):
+    def optimize_off_splice(self, proxy='auto', str_range=(0.70, 1.05), str_step=0.01,stretch_penalty = 0.1, plot_results=True):
         """
         Uses on-splice sections as tiepoints to constrain micro-scale grid searches.
         Grid searches are optimized based on penalized Pearson correlation values.
@@ -91,6 +123,7 @@ class CompositeBuilder:
                 all_proxies.update(c.active_proxies)
         all_proxies = list(all_proxies)
         
+
         if proxy != 'auto' and proxy not in all_proxies:
             print(f"Error: '{proxy}' not found. Available: {all_proxies}")
             return
@@ -117,33 +150,16 @@ class CompositeBuilder:
                 if not (has_locked and has_unlocked):
                     continue 
                 
-                # Calculate the baseline affine shift from the on-splice sections
+                # Calculate the affine shift from the on-splice sections
                 locked_shifts = [s.affine_shift for s in core.sections if s.is_locked]
-                base_anchor = sum(locked_shifts) / len(locked_shifts)
-                current_shift = base_anchor
-                
-                # Identify the first locked section's index
-                first_locked_idx = next(i for i, s in enumerate(core.sections) if s.is_locked)
+                anchor_shift = sum(locked_shifts) / len(locked_shifts)
                 
                 unlocked_secs = [s for s in core.sections if not s.is_locked]
                 if not unlocked_secs: continue
                     
-                print(f"Correlating Core {core.core_id} ({len(unlocked_secs)} unlocked sections, Base Affine shift: {base_anchor:+.2f}m)...")
+                print(f"Correlating Core {core.core_id} ({len(unlocked_secs)} unlocked sections, Affine shift: {anchor_shift:+.2f}m)...")
                 
-                # Iterate over ALL sections to maintain the physical cascade
-                for i, sec in enumerate(core.sections):
-                    
-                    if sec.is_locked:
-                        # Reset cascade to the exact locked shift to ensure on-splice integrity
-                        current_shift = sec.affine_shift + (sec.drilled_bottom - sec.drilled_top) * (sec.stretch_factor - 1.0)
-                        continue
-
-                    # Freeze discarded sections above the tiepoint to prevent them from stretching into the splice
-                    if i < first_locked_idx:
-                        sec.affine_shift = base_anchor
-                        sec.stretch_factor = 1.0
-                        continue
-                        
+                for sec in unlocked_secs:
                     # When proxy is set to "auto", this code uses the signal-to-noise ratio of the
                     # physical properties / colorimetry data to determine the best one to use for automatic
                     # correlation for a given chunk
@@ -161,23 +177,17 @@ class CompositeBuilder:
                         
                         if best_snr == -1.0:
                             print(f"[Sec {sec.section_id}] Skipped: No valid data.")
-                            growth = (sec.drilled_bottom - sec.drilled_top) * (sec.stretch_factor - 1.0)
-                            current_shift += growth
                             continue
 
                     target_splice = splices.get(best_proxy)
                     if target_splice is None or target_splice.empty:
                         print(f"[Sec {sec.section_id}] Skipped: Splice missing.")
-                        growth = (sec.drilled_bottom - sec.drilled_top) * (sec.stretch_factor - 1.0)
-                        current_shift += growth
                         continue
 
                     # Extracting chunk data
                     clean_sec = sec.scaled_data.dropna(subset=[best_proxy])
                     if len(clean_sec) < 15:
                         print(f"[Sec {sec.section_id}] Skipped: Insufficient data.")
-                        growth = (sec.drilled_bottom - sec.drilled_top) * (sec.stretch_factor - 1.0)
-                        current_shift += growth
                         continue
                         
                     # these variables are important elsewhere and have to be defined here 
@@ -188,29 +198,26 @@ class CompositeBuilder:
                     # Grid Search for optimal alignment
                     best_sec_score, best_str = self._optimize_single_section(
                         sec=sec, 
-                        anchor_shift=current_shift, 
+                        anchor_shift=anchor_shift, 
                         target_splice=target_splice, 
                         best_proxy=best_proxy, 
                         str_range=str_range, 
                         str_step=str_step,
-                        stretch_penalty=stretch_penalty
+                        stretch_penalty = stretch_penalty
                     )
                                 
-                    # Apply results and cascade
-                    sec.affine_shift = current_shift
+                    # Lock the aligned chunk and then 
                     if best_sec_score > 0.2:
-                        print(f"[Sec {sec.section_id}] Matched using '{best_proxy}' R={best_sec_score:.2f} (Shift: {current_shift:+.2f}m, Stretch: {best_str:.2f}x)")
+                        print(f"[Sec {sec.section_id}] Matched using '{best_proxy}' R={best_sec_score:.2f} (Shift: locked to {anchor_shift:+.2f}m, Stretch: {best_str:.2f}x)")
+                        sec.affine_shift = anchor_shift
                         sec.stretch_factor = best_str
                         sec.aligned_proxy = best_proxy
                         alignment_scores.append(best_sec_score)
                     else:
                         print(f"[Sec {sec.section_id}] Failed to find strong match (Max R={best_sec_score:.2f}). Snapping to tiepoint baseline.")
+                        sec.affine_shift = anchor_shift
                         sec.stretch_factor = 1.0  
                         sec.aligned_proxy = None
-
-                    # Calculate downward growth and add it to the shift for the next chunk
-                    growth = (sec.drilled_bottom - sec.drilled_top) * (sec.stretch_factor - 1.0)
-                    current_shift += growth
 
         # Plot results
         
@@ -350,33 +357,29 @@ class CompositeBuilder:
             print("Error: Target splice is empty for the selected proxy.")
             return
 
-        current_shift = manual_anchor_shift
-        
         for sec in core.sections:
             if sec.is_locked:
-                # Update current_shift to cascade past locked sections
-                current_shift = sec.affine_shift + (sec.drilled_bottom - sec.drilled_top) * (sec.stretch_factor - 1.0)
-                continue 
+                continue # Skip sections that are already safely on the splice
                 
+            # Same math as the batch processor
             score, best_str = self._optimize_single_section(
                 sec=sec, 
-                anchor_shift=current_shift, 
+                anchor_shift=manual_anchor_shift, 
                 target_splice=target_splice, 
                 best_proxy=proxy, 
                 str_range=str_range, 
                 str_step=str_step,
-                stretch_penalty=stretch_penalty
+                stretch_penalty = stretch_penalty
             )
 
-            # Apply the dynamically cascading shift
-            sec.affine_shift = current_shift
+            # Apply the results
             if score > 0.2:
+                print(f"     [Sec {sec.section_id}] Snapped & Stretched! R={score:.2f} (Stretch: {best_str:.2f}x)")
+                sec.affine_shift = manual_anchor_shift
                 sec.stretch_factor = best_str
                 sec.aligned_proxy = proxy
             else:
+                print(f"     [Sec {sec.section_id}] Stretch failed (Max R={score:.2f}). Snapping without stretching.")
+                sec.affine_shift = manual_anchor_shift
                 sec.stretch_factor = 1.0 
                 sec.aligned_proxy = None
-                
-            # Calculate downward growth and add it to the shift for the next chunk
-            growth = (sec.drilled_bottom - sec.drilled_top) * (sec.stretch_factor - 1.0)
-            current_shift += growth
