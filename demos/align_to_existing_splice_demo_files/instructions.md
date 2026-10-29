@@ -97,7 +97,7 @@ Let's focus on correlating the upper cores to the composite section, starting wi
 
 <img width="1857" height="1012" alt="image" src="https://github.com/user-attachments/assets/3000aa3e-300c-4eff-b445-8a0ab3ab423a" />
 
-Now, let's add tiepoints for our off-splice cores. You can do this by left clicking the feature on the off-splice core that you want to align to the composite, and then right clicking on the point on the composite where you want to tie in the off-splice core. If you keep the "Auto-Realign" button selected, the algorithm will calculate the stretching and squeecing required to align the rest of the core to the composite (it will not update the plot to show this for the sake of efficiency).
+Now, let's add tiepoints for our off-splice cores. You can do this by left clicking the feature on the off-splice core that you want to align to the composite, and then right clicking on the point on the composite where you want to tie in the off-splice core. If you keep the "Auto-Realign" button selected, the algorithm will calculate the stretching and squeezing required to align the rest of the core to the composite and will update the plot to show what was done.
 
 Another useful tool for you is the "Manual Nudge." Let's say that you change your mind about the alignment of an off-splice core that you tied in. You can update the alignment by left clicking on the composite, right clicking on the off splice core, and then clicking the "Manual Nudge" button. This will shift the entire core to that position on the composite section.
 
