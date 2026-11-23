@@ -76,41 +76,56 @@ My python environment is called workstation, so the version of this command that
 
 Here is what that looks like on my Windows device:
 
-<img width="1167" height="587" alt="image" src="https://github.com/user-attachments/assets/553b718a-00d9-4305-938e-b6271107faa7" />
+<img width="1532" height="910" alt="image" src="https://github.com/user-attachments/assets/0d1975f3-1cec-4049-88ae-3a34b6f7ea7e" />
 
-Then, launch your python IDE. I prefer to use Spyder, so this tutorial is written with that use case in mind. To use spyder in your python environment, you will have to install it if you have not already. See the installation guide for those instructions (it is only one line of code!). To launch spyder from Anaconda prompt or the terminal, simply type "spyder" and press enter:
+Then, launch your python IDE. I prefer to use Spyder, so this tutorial is written with that use case in mind. To use Spyder in your python environment, you will have to install it if you have not already. See the installation guide for those instructions (it is only two lines of code!). To launch Spyder from Anaconda prompt or the terminal, simply type "Spyder" and press enter:
 
-<img width="1161" height="587" alt="image" src="https://github.com/user-attachments/assets/47e16118-b824-48eb-9480-27c934becc26" />
+<img width="1532" height="892" alt="image" src="https://github.com/user-attachments/assets/c09d8cde-0463-467f-980d-5ddc9a8070b0" />
 
 When you first launch Spyder, your screen should look something like this:
 
 <img width="1911" height="1127" alt="image" src="https://github.com/user-attachments/assets/351535aa-faac-4620-af6f-18d0d5c1933e" />
 
+The first time you do this, you will need to connect Spyder to the core_composite python environment. Instructions for how to do this are in the installation guide. 
+
 Use the folder button on the top left side to open the demo script. You should now see the code that calls the image analysis functions in Core Composite:
 
-<img width="1905" height="1127" alt="image" src="https://github.com/user-attachments/assets/86e866dc-f75e-4452-920b-7e9f39dd1eff" />
+<img width="1535" height="910" alt="image" src="https://github.com/user-attachments/assets/880e55fc-ea85-4e70-a350-b2ddf0a4b12a" />
 
 To run this code, you will have to set your working directory to be the folder that contains the .pdf files of the core photographs. You can do that by clicking the folder button on the **top right** of the spyder user interface:
 
-<img width="1912" height="1142" alt="image" src="https://github.com/user-attachments/assets/65e4e8cd-dd14-4cd6-89df-a3b2f87b0abf" />
+<img width="1535" height="910" alt="image" src="https://github.com/user-attachments/assets/ccb78143-23e5-41b5-967e-f6a425c0ccbe" />
 
-Before we run the code, we need to make sure that the information matches for our site. The demo file is set up for ODP Site 887, but if you are working on another site, you will need to update two things:
+Before we run the code, we need to make sure that the information matches for our site. The demo file is set up for ODP Site 887, but if you are working on another site, you will need to update three things:
 
-**1) Line 55: section_summary_csv="887_section_summary.csv" - this line must match the name of your section summary file, with the name and file extension contained within the quotation marks.**
+**1) Line 22:**
+  **image_path - this is the name of the image file to generate the diagnostic RGB histogram.   By default, it will search you current working directory for the converted .jpg files produced by convert_pdfs_to_images(). You can provide a path to a different folder if you prefer via this argument as well.**
 
-**2) Line 56: leg=145 - this line must match the expedition number your drill site was collected during.**
+  **figure_filename - this is the file name of the .pdf of the histogram figure.**
 
-**3) Line 57: output_prefex="Site887" - this must match your site name, with the name entirely contained within the quotation marks.**
+**2) Line 25:
+  summary_csv_path="887_section_summary.csv" - this line must match the name of your section   summary file, with the name and file extension contained within the quotation marks**
+  
+  **leg=145 - this line must match the expedition number your drill site was collected during** 
+  
+  **output_prefex="Site887" - this must match your site name, with the name entirely contained     within the quotation marks.**
+
+  **3) Line 28:**
+  **summary_csv_path needs to be updated here as well**
 
 Once that is all set, hit the little green arrow on the top ribbon of spyder to save and run the script:
 
-<img width="1912" height="1142" alt="image" src="https://github.com/user-attachments/assets/aaca94fe-d88d-4cde-86b1-9713e41bff44" />
+<img width="1535" height="910" alt="image" src="https://github.com/user-attachments/assets/451a9f0a-9f8b-445a-80bd-d2d07654662d" />
 
 When you run this script for the first time, it will convert all of the .pdf files to .jpg before opening a popup window where you will begin the image analysis. Your console in spyder should look like this:
 
 <img width="616" height="707" alt="image" src="https://github.com/user-attachments/assets/d48d24bc-d098-4dc4-ae32-1b7d9ea4470f" />
 
-The popup window will show you the first core photograph in your sequence and will ask you to draw a single box down one of the white tracks to establish the background lighting effects in the image. My preferred method for this is shown below:
+You should now see see a popup window that looks like this:
+
+<img width="1161" height="811" alt="image" src="https://github.com/user-attachments/assets/d847c24f-aaed-42b2-aaaf-cf4ad7410d6d" />
+
+The popup window will ask you to draw a single box down one of the white tracks to establish the background lighting effects in the image. My preferred method for this is shown below:
 
 <img width="607" height="991" alt="image" src="https://github.com/user-attachments/assets/a656a369-1f32-4598-92d3-83adf7107d3b" />
 
@@ -124,54 +139,29 @@ Hit enter. You will be prompted about whether you want to calibrate the image pr
 
 You will then be prompted to draw boxes over the sediment core sections by left clocking and dragging your mouse. I prefer to do this in the middle of cores, skipping the core catcher since those sediments are not stratigraphically informative, like so:
 
-<img width="567" height="992" alt="image" src="https://github.com/user-attachments/assets/6b632dad-0cd5-4fea-a437-485db9886c4a" />
+<img width="1201" height="832" alt="image" src="https://github.com/user-attachments/assets/5a010e72-ebd5-49e2-958e-11a22e41d776" />
 
-If you make a mistake, hit the "d" button on your keyboard to undo the last box you drew. Close the window to extract the color data and repeat this process for each core. *Recommendation: make notes of large cracks or voids in each core while doing this step. It will make the post-extraction data processing much easier.*
+If you make a mistake, hit the "d" button on your keyboard to undo the last box you drew. 
 
 **Important:** 
-**Notice that in core section 1, I draw the box down to 150 cm, even though the bottom of this core section was sampled for intersitial water analyses ("IW") from 145 cm to 150 cm. This is because the cored length of this section in "887_section_summary.csv" is 1.5 m. The discrepency is caused by the fact that this sediment was sampled before the core was photographed. Unfortunately, we have to address this in one of two ways:**
+**Notice that in core section 1, I draw the box down to 150 cm, even though the bottom of this core section was sampled for interstitial water analyses ("IW") from 145 cm to 150 cm. This is because the curated length of this section in "887_section_summary.csv" is 1.5 m. For convenience, the curated length (CL) of the core and the other information from the section summary is provided in the table to the right. The discrepancy between the length of sediment in the photo and the curated length is because this sediment was sampled before the core was photographed. We address this by drawing a separate box around the "IW section, followed by hitting the "V" key to mark that box as symbolizing a void:**
 
-**1). Draw a box down to 150 cm (1.5 m) and then later delete this interval from the spreadsheet. [this tutorial uses this method].**
+<img width="1157" height="846" alt="image" src="https://github.com/user-attachments/assets/ccbf5069-6ff9-426c-acca-e7b7abbe349c" />
 
-**2). Edit the variable "CL(m)" in "887_section_summary.csv" to match the depth to which there is sediment in the photograph (in this case, 1.45 m) and then draw the box over the region of the core section where there is sediment.**
 
-**My overwhelming preference is to use the first method because it is much more efficient. This is because you can sort the final spreadsheet by L\* values and then delete all values that are near 100. You will see this at the end of the process.**
+**We handle voids and core distirbances the same way. This "V" or void designation tells CorePhotoDigitizer to mask this interval of the core since the extracted color data are not reliable. You can see an example of this in the image above.**
 
-After you finish color extraction of the last core, the popup window will close and your console will look like this:
+When you are done drawing your core and void boxes, close the popup window. The software will process the image and then show you the next one in a new popup window. You will repeat the above procedure for each image from which you extract color data. After you finish color extraction of the last core, the popup window will close and your console will look like this:
 
-<img width="615" height="582" alt="image" src="https://github.com/user-attachments/assets/33dff198-f75a-45c0-8db0-3457a7b4a26c" />
+<img width="970" height="585" alt="image" src="https://github.com/user-attachments/assets/5fc6e90e-267c-474d-8d5e-a1fe7fe44e8a" />
 
 And your working directory will have a lot of new files. Notice "Site887_Hole_A_Color.csv" and "Site887_Hole_B_Color.csv" - these files contain all of the extracted color data for the cores from hole A and hole B that you processed plotted on the driller's wire line depth scale [depth (mbsf) or meters below sea floor] (if you are processing a different core, you will see different names). Let's open "Site887_Hole_A_Color.csv" to see what is inside.
 
-<img width="1907" height="897" alt="image" src="https://github.com/user-attachments/assets/8606c60b-215c-43cc-9ba5-78650fa7715b" />
+<img width="1502" height="871" alt="image" src="https://github.com/user-attachments/assets/55f43aa1-9573-4148-b1b0-2e7837d1b433" />
 
-These are the L*, a*, and b* data that we extracted from these core images. We now need to do a bit of post-processing to make sure that there are no artifacts in our color data. We can identify issues by plotting the L* data in our .csv file. An annotated example is plotted below, where we can see large excursions from the bulk of our extracted color data that correspond to features we saw in our core photos:
+These are the L*, a*, and b* data that we extracted from these core images. The empty values were masked because I drew a void box over that particular core section. 
 
-<img width="1883" height="1095" alt="image" src="https://github.com/user-attachments/assets/8fc6f968-91c6-4304-82b8-af75f5e99f5d" />
-
-These artifacts need to be removed from our data. We can do this by sorting the sheet by the L* and clicking yes when prompted about whether you would like to expand the selection. You can find the sort button under the data tab in Microsoft Excel:
-
-<img width="1905" height="1105" alt="image" src="https://github.com/user-attachments/assets/e8d45dc2-3145-4f08-92b7-53de3f672f51" />
-
-First, sort the sheet by Z to A (largest to smallest when used on numbers) to put all of the rows with high L\* values at the top. In our dataset, the largest L\* values that are part of our sedimentary sequence appear to be ~50, so we will remove all L\* values > 55 to be safe. We will do the same thing for very low values by sorting the sheet from A to Z (smallest to largest), but here we will just remove L\* values <0 since the ash layers (a real geologic feature) also have very low L\* values.  *L\* values < 0 should be removed, since measured L\* cannot be < 0 (these occur because of how the program mitigates lighting artifacts).*
-
-Now, sort the sheet again from A to Z by depth. You will see that, while we removed the extreme values, there are still some sharp color changes that we should investigate further by comparing these sharp color changes to our notes and core photographs. For example, if we look at 887A 2H, there are real sharp color changes due to ash layers, but other sharp changes are caused by voids: 
-
-<img width="727" height="1062" alt="image" src="https://github.com/user-attachments/assets/80cccc22-8798-4c52-a7b1-26a5bf767209" />
-
-A good rule of thumb is to check the following places:
-
-i). The top of section 1 of every core, this is the most likely place to be disturbed by the coring process. 
-
-ii). The bottom of each core section, these are sometimes disturbed, presumably by core splitting.
-
-Be careful to only remove color excursions (artifacts) caused by voids or missing sediment! The best way to do this is to carefully compare your color data to core photographs. It is also ok to simply ignore these features if your purpose is to do stratigraphic correlation, but it will likely cause problems for the automatic of off-splice materials to your splice since the calculated signal-to-noise ratio of these features in that algorithm is very high. 
-
-After cleaning, your dataset from 887A should look something like this:
-
-<img width="1211" height="522" alt="image" src="https://github.com/user-attachments/assets/14208a68-7fde-4ed8-af34-2075ea7c233d" />
-
-Repeat this process with 887B. You just finished extracting your first color data!
+Congratulations! You just extracted color data from legacy core images for the first time.
 
 ### Calculating % reflectance from L\*
 Core Composite includes a simple function to calculate % reflectance from L* values. An example of how to do that with your 887A color data is included in the "get_reflectance_demo.py" file. 
