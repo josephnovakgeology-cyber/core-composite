@@ -9,7 +9,7 @@ These are the data structure classes for core composite.
 
 import pandas as pd
 import numpy as np
-
+from pandas.api.indexers import BaseIndexer
 
 """
 The section, core, and hole classes are major organizing features of the script that 
@@ -36,26 +36,29 @@ class Section:
         self.last_r_score = np.nan #R_penalized
         
     def split_at_depth(self, split_drilled_depth):
-        """
-        This function handles the logic for the transition from on-splice to off-splice within a section.
-        
-        The section is split at the on-splice / off-splice boundary, and the off-splice
-        data is then tagged as a chunk that can be stretched or compressed later by CompositeBuilder.
-        """
         if split_drilled_depth <= self.drilled_top or split_drilled_depth >= self.drilled_bottom:
-            return None # Sometimes there are data without depth assignments in ODP data files. IDK why, but this logic handles that problem.
+            return None
         
-        # splitting the data up
-        top_data = self.scaled_data[self.scaled_data['Base_Scaled_Depth'] <= split_drilled_depth]
-        bot_data = self.scaled_data[self.scaled_data['Base_Scaled_Depth'] > split_drilled_depth]
+        orig_top = getattr(self, 'original_drilled_top', self.drilled_top)
+        orig_bot = getattr(self, 'original_drilled_bottom', self.drilled_bottom)
         
-        # The top piece becomes is locked as part of the composite section / splice
+        # Use strict < on top_data so the exact cut point isn't duplicated in both chunks
+        top_data = self.scaled_data[self.scaled_data['Base_Scaled_Depth'] < split_drilled_depth].copy()
+        bot_data = self.scaled_data[self.scaled_data['Base_Scaled_Depth'] >= split_drilled_depth].copy()
+        
+        if top_data.empty or bot_data.empty:
+            return None
+
         top_sec = Section(self.hole_name, self.core_id, f"{self.section_id}a", top_data, self.proxies, is_locked=True)
-        # The bottom piece remains unlocked as part of the off-splice materials
         bot_sec = Section(self.hole_name, self.core_id, f"{self.section_id}b", bot_data, self.proxies, is_locked=False)
         
-        # Keeps continuity of affine shifts and stretch factors between chunks
-        # The alignments become completely nonsensical if this is not here
+        # preserve anchor depths
+        top_sec.original_drilled_top = orig_top
+        top_sec.original_drilled_bottom = orig_bot
+        bot_sec.original_drilled_top = orig_top
+        bot_sec.original_drilled_bottom = orig_bot
+        
+        # preserve affine shifts and stretch factors
         top_sec.affine_shift = self.affine_shift
         bot_sec.affine_shift = self.affine_shift
         top_sec.stretch_factor = self.stretch_factor
@@ -64,7 +67,7 @@ class Section:
         return top_sec, bot_sec
 
 class Core:
-    def __init__(self, hole_name, core_id, core_df, drilled_top, drilled_bottom, proxy_keywords):
+    def __init__(self, hole_name, core_id, core_df, drilled_top, drilled_bottom, recovered_length, proxy_keywords):
         """
         Definitions for the variables in this class.
         """
@@ -98,17 +101,26 @@ class Core:
                 self.data[std_name] = pd.to_numeric(self.data[std_name], errors='coerce')
                 self.active_proxies.append(std_name)
                 
-        # Outlier removal
-        # This is just meant to deal with isolated extreme values
-        outlier_multiplier = 3.0 
+        # Outlier removal by depth-based rolling window
+        physical_window_m = 0.25  
+        std_multiplier = 4.0      
+        
+        depth_indexer = DepthWindowIndexer(index_array=self.data['Depth'].values, window_size=physical_window_m)
+        
         for proxy in self.active_proxies:
-            Q1 = self.data[proxy].quantile(0.25)
-            Q3 = self.data[proxy].quantile(0.75)
-            IQR = Q3 - Q1
-            lower_bound = Q1 - (outlier_multiplier * IQR)
-            upper_bound = Q3 + (outlier_multiplier * IQR)
-            if proxy == 'Density': lower_bound = max(lower_bound, 1.15) 
+            rolling_median = self.data[proxy].rolling(depth_indexer, min_periods=3).median()
+            rolling_std = self.data[proxy].rolling(depth_indexer, min_periods=3).std()
+            
+            rolling_std = rolling_std.fillna(self.data[proxy].std())
+            
+            lower_bound = rolling_median - (std_multiplier * rolling_std)
+            upper_bound = rolling_median + (std_multiplier * rolling_std)
+            
             outlier_mask = (self.data[proxy] < lower_bound) | (self.data[proxy] > upper_bound)
+            if proxy.lower() == 'density': 
+                outlier_mask = outlier_mask | (self.data[proxy] < 1.0) # density of water
+                outlier_mask = outlier_mask | (self.data[proxy] > 3.4) # max density of peridotite
+                
             self.data.loc[outlier_mask, proxy] = np.nan
             
         # Bringing in our relevant variables from the section class
@@ -116,115 +128,110 @@ class Core:
         self.drilled_top = drilled_top
         self.drilled_bottom = drilled_bottom
         self.drilled_length = drilled_bottom - drilled_top
+        self.recovered_length = recovered_length
         self.scaled_data = None 
         self.sections = []
 
-    def compress_depth_and_split(self, chunk_size=1.0):
+    def compress_depth_and_split(self, chunk_size=1.0, compress_depth=True):
         """
         This function applies (1) any necessary compression if drilled length < recovered length and
         (2) the function that splits on-splice from off-splice data.
         
+        If compress_depth is False, scaled depth is set equal to depth (mbsf) to align 
+        with legacy MCD values that did not account for excess recovery.
         Default chunk size is set to 1 meter.
         """
         if self.data.empty: return
-        recovered_length = self.data['Depth'].max() - self.data['Depth'].min()
-        # calculating R_f from Equation 11
-        rf = min(1.0, self.drilled_length / recovered_length) if recovered_length > 0 else 1.0
-        
+    
         self.scaled_data = self.data.copy()
         
-        # Equation 11 from the manuscript
-        self.scaled_data['Base_Scaled_Depth'] = self.drilled_top + ((self.data['Depth'] - self.data['Depth'].min()) * rf)
-        
-        # making the chunks
+        if compress_depth:
+            # Calculate recovery factor based on the summary file
+            rf = min(1.0, self.drilled_length / self.recovered_length) if self.recovered_length > 0 else 1.0
+            self.scaled_data['Base_Scaled_Depth'] = self.drilled_top + ((self.data['Depth'] - self.drilled_top) * rf)
+        else:
+            # Bypass compression entirely for legacy splice compatibility
+            self.scaled_data['Base_Scaled_Depth'] = self.data['Depth']
+    
+        # Making the chunks
         min_d = self.scaled_data['Base_Scaled_Depth'].min()
         max_d = self.scaled_data['Base_Scaled_Depth'].max()
         bins = np.arange(min_d, max_d + chunk_size, chunk_size)
         if len(bins) == 1: bins = np.append(bins, max_d + chunk_size)
-            
-        self.scaled_data['Virtual_Section'] = pd.cut(self.scaled_data['Base_Scaled_Depth'], bins, include_lowest=True, labels=False)
         
+        self.scaled_data['Virtual_Section'] = pd.cut(self.scaled_data['Base_Scaled_Depth'], bins, include_lowest=True, labels=False)
+    
         for sect_id, group in self.scaled_data.groupby('Virtual_Section'):
             if len(group) > 5:
                 self.sections.append(Section(self.hole_name, self.core_id, str(sect_id), group, self.active_proxies))
-                
-        if not self.sections:
-            self.sections.append(Section(self.hole_name, self.core_id, "1", self.scaled_data, self.active_proxies))
+            
+            if not self.sections:
+                self.sections.append(Section(self.hole_name, self.core_id, "1", self.scaled_data, self.active_proxies))
 
     def apply_splice_cut(self, splice_mcd):
-        """
-        When the user is using the SpliceBuilderGUI to make a new splice, this function
-        cuts the current "master core" where the user selects a tie point to the parallel borehole
-        (the "master core" refers to the core that is currently the basis of the deepest
-        portion of the splice that is being actively built) and "discards" any data in the core that are
-        deeper than the new tiepoint as "off-splice" data.
-        
-        Those deeper data in the core will be aligned to the composite section later by CompositeBuilder.
-        
-        
-        """
+        """Cuts the master core at splice_mcd, retaining data above as locked."""
+        new_sections = []
         for sec in self.sections:
-            if not sec.is_locked: continue
+            if not sec.is_locked:
+                new_sections.append(sec)
+                continue
             
-            # Calculate the visual boundaries of this section for the GUI
-            vis_top = sec.drilled_top + sec.affine_shift
-            vis_bot = (sec.drilled_bottom - sec.drilled_top) * sec.stretch_factor + sec.drilled_top + sec.affine_shift
+            orig_top = getattr(sec, 'original_drilled_top', sec.drilled_top)
+            vis_top = (sec.drilled_top - orig_top) * sec.stretch_factor + orig_top + sec.affine_shift
+            vis_bot = (sec.drilled_bottom - orig_top) * sec.stretch_factor + orig_top + sec.affine_shift
             
-            # If the cut falls inside this section
             if vis_top <= splice_mcd <= vis_bot:
-                # Convert MCD back to Depth (mbsf)
-                relative_mcd = splice_mcd - sec.affine_shift - sec.drilled_top
-                raw_cut_depth = sec.drilled_top + (relative_mcd / sec.stretch_factor)
+                relative_mcd = splice_mcd - sec.affine_shift - orig_top
+                raw_cut_depth = orig_top + (relative_mcd / sec.stretch_factor)
                 
-                # Filter the dataframe to only keep data above the cut
-                sec.scaled_data = sec.scaled_data[sec.scaled_data['Base_Scaled_Depth'] <= raw_cut_depth].copy()
+                split_res = sec.split_at_depth(raw_cut_depth)
+                if split_res:
+                    top_sec, bot_sec = split_res
+                    top_sec.is_locked = True
+                    bot_sec.is_locked = False
+                    
+                    # Store exact MCD bounds on the locked section
+                    top_sec.splice_top_mcd = vis_top
+                    top_sec.splice_bot_mcd = splice_mcd
+                    
+                    new_sections.extend([top_sec, bot_sec])
+                else:
+                    new_sections.append(sec)
+            else:
+                new_sections.append(sec)
                 
-                # update the chunk boundaries
-                sec.drilled_bottom = raw_cut_depth
-                
-                # any chunks in the core below this are unlocked and will be aligned by CompositeBuilder later
-                unlock_rest = False
-                for s in self.sections:
-                    if unlock_rest:
-                        s.is_locked = False
-                    if s == sec:
-                        unlock_rest = True
-                break
+        self.sections = new_sections
 
     def apply_candidate_cut(self, raw_click_depth):
-        """
-        Cuts the "candidate core" so it begins at raw_click_depth.
-        Everything above this depth is labeled as off-splice and ignored; 
-        everything below is locked into the splice.
-        
-        Here, a "candidate core" refers to the core that is about to be added to the splice. 
-        It will then become the "master core" that a subsequent candidate core is splice onto.
-        """
+        """Cuts candidate core at raw_click_depth, locking deeper data."""
+        new_sections = []
         for sec in self.sections:
-            # If the cut falls inside this section
             if sec.drilled_top <= raw_click_depth <= sec.drilled_bottom:
+                split_res = sec.split_at_depth(raw_click_depth)
+                if split_res:
+                    top_sec, bot_sec = split_res
+                    top_sec.is_locked = False
+                    bot_sec.is_locked = True
+                    
+                    orig_top = getattr(bot_sec, 'original_drilled_top', bot_sec.drilled_top)
+                    bot_sec.splice_top_mcd = (bot_sec.drilled_top - orig_top) * bot_sec.stretch_factor + orig_top + bot_sec.affine_shift
+                    bot_sec.splice_bot_mcd = (bot_sec.drilled_bottom - orig_top) * bot_sec.stretch_factor + orig_top + bot_sec.affine_shift
+                    
+                    new_sections.extend([top_sec, bot_sec])
+                else:
+                    new_sections.append(sec)
+            else:
+                new_sections.append(sec)
                 
-                # Only keep data below the cut
-                sec.scaled_data = sec.scaled_data[sec.scaled_data['Base_Scaled_Depth'] >= raw_click_depth].copy()
-                
-                # Update the section boundaries to place the section onto the MCD scale
-                sec.drilled_top = raw_click_depth
-                
-                # Mark this section and all below it as "on-splice" until a new tiepoint is placed
-                lock_rest = False
-                for s in self.sections:
-                    if s == sec:
-                        lock_rest = True
-                    if lock_rest:
-                        s.is_locked = True
-                break
+        self.sections = new_sections
 
 class Hole:
-    def __init__(self, hole_name):
+    def __init__(self, hole_name, leg = ""):
         """
         Definitions for the variables in this class.
         """
         self.hole_name = hole_name
+        self.leg = leg
         self.cores = []
 
     def get_positioned_data(self):
@@ -295,7 +302,7 @@ class SpliceRecord:
             if hole_data.empty:
                 continue
 
-            # Filter data belonging ONLY to this specific core and strictly within the tie MCD bounds
+            # Filter data belonging only to this specific core and strictly within the tie MCD bounds
             core_mask = (hole_data['Core'].astype(str) == core_id) if 'Core' in hole_data.columns else True
             
             # Extract data mathematically bounded between top_mcd and bot_mcd
@@ -313,3 +320,14 @@ class SpliceRecord:
             return combined.sort_values(by='MCD').reset_index(drop=True)
             
         return pd.DataFrame()
+
+class DepthWindowIndexer(BaseIndexer):
+    """
+    Depth-smart outlier detection, executed within the Core object.
+    """
+    def get_window_bounds(self, num_values, min_periods, center, closed, step):
+        depths = self.index_array
+        half_window = self.window_size / 2.0
+        start = np.searchsorted(depths, depths - half_window, side='left')
+        end = np.searchsorted(depths, depths + half_window, side='right')
+        return start, end
