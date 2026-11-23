@@ -66,13 +66,13 @@ Alrighty then. You now have all of your core images in a single folder for your 
 
 The basic format of the script that is used for calling the image analysis functions in core composite is contained in **"image_processing_demo.py"** in the demos folder of this Github repository. The file path is: **core_composite/demos/core_photo_analysis_demo_files/image_processing_demo.py** ; Go ahead and copy **"image_processing_demo.py"** into the same folder as all of your core images. 
 
-You now need to activate your python environment where you installed Core Composite (see the installation guide for details on how to make a python environment and install core_composite via pip). To do this, you must open Anaconda Prompt (Windows) or the Terminal (Mac / Linux) and type the following command and press enter: 
+You now need to activate your python environment where you installed Spyder (see the installation guide for details on how to make a python environment and install core_composite via pip). To do this, you must open Anaconda Prompt (Windows) or the Terminal (Mac / Linux) and type the following command and press enter: 
 
 **conda activate your_environment_name_here**
 
-My python environment is called core_composite, so the version of this command that I type is:
+My python environment is called workstation, so the version of this command that I type is:
 
-**conda activate core_composite**
+**conda activate workstation**
 
 Here is what that looks like on my Windows device:
 
