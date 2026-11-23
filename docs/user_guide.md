@@ -163,6 +163,22 @@ These are the L*, a*, and b* data that we extracted from these core images. The 
 
 Congratulations! You just extracted color data from legacy core images for the first time.
 
+### Interpreting RGB histograms and output from the check_photo_quality() function
+
+<img width="570" height="185" alt="image" src="https://github.com/user-attachments/assets/8e80448d-241c-49ea-835f-abb35e797e1f" />
+
+Plotted above are histograms of the red, green, and blue pixels within the core photo for 887A 2H. These are the typical histograms of a well-exposed core photo: a bimodal R, G, and B distribution with very few pixels at the extreme edges (0 and 255) of the spectrum. Below is an example of a severely overexposed photo:
+
+<img width="752" height="246" alt="image" src="https://github.com/user-attachments/assets/5bb8cb9c-a287-4310-afbe-97178695ebae" />
+
+As described in our manuscript, overexposure leads to color information loss in the channel(s) that are overexposed. Such photographs are not suitable for color data extraction, at least until we figure out a better protocol. 
+
+To prevent anyone from wasting time processing low-quality images, we include the check_photo_quality function that summarizes these tests, as shown below:
+
+<img width="682" height="137" alt="image" src="https://github.com/user-attachments/assets/9dd4c85c-4274-49ee-b923-5654f88a6261" />
+
+The percentages listed here are the proportions of the photograph that have a R, G, or B value < 5 (crushed shadows) or > 250 (blown highlights). In either case, images with crushed shadows or blown highlights should not be analyzed. We strongly recommend checking the quality of your images with this function after conversion from .pdf and **before** extracting any color data.
+
 ### Calculating % reflectance from L\*
 Core Composite includes a simple function to calculate % reflectance from L* values. An example of how to do that with your 887A color data is included in the "get_reflectance_demo.py" file. 
 
