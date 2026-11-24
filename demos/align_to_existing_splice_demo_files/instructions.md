@@ -3,7 +3,8 @@ These instructions walk you through how to use Core Composite to align off-splic
 
 These are the exact same instructions that appear in the user guide. 
 
-## Required Files
+## Semi-automated alignment of off-splice materials to published composite sections
+### Required Files
 The required files for this demo can be found in **core_composite/demos/align_to_existing_splice_demo_files**
 
 There are a substantial number of files because we are working with data from four holes. We will base our work on gamma ray attenuation porosity evaluator (GRAPE) wet bulk density (WBD) and magnetic susceptibility data. These files are freely available in the Janus web database. The required files are:
@@ -14,12 +15,12 @@ There are a substantial number of files because we are working with data from fo
 
 **3). The published affine table ("Keigwin_splice.csv")**
 
-## Alignment of off-splice materials to a published composite section / splice
+### Alignment of off-splice materials to a published composite section / splice
 Like with the other functions in Core Composite, all of the data files should be in the same folder as your script. Download all of the files from Github if you want to follow along with the demo. These instructions will be very similar to those for **SpliceBuilderGUI** because both of these modules use the same data structures. 
 
-To get started, open Anaconda Prompt (PC) or the Terminal (Mac / Linux) and activate your python environment where you installed Core Composite. Mine is called "core_composite" so I use the following command in Anaconda Prompt:
+To get started, open Anaconda Prompt (PC) or the Terminal (Mac / Linux) and activate your python environment where you installed Core Composite. Mine is called "workstation" so I use the following command in Anaconda Prompt:
 
-**conda activate core_composite**
+**conda activate workstation**
 
 Now launch spyder with the following command:
 
@@ -32,7 +33,7 @@ Spyder will open to the last script you were working on. Use the navigation butt
 
 Once you have the demo script open and the working directory set, spyder should look like this:
 
-<img width="1902" height="1125" alt="image" src="https://github.com/user-attachments/assets/9e03204a-5b31-44b2-b469-2d565ce18ace" />
+<img width="1532" height="887" alt="image" src="https://github.com/user-attachments/assets/51b82715-9c9d-4d94-838d-7db0e8c8b65e" />
 
 If you are following the demo, then the file is already set up to run. Let's walk through what each of the lines of code in this script do so that you can modify it later to work on different drill sites. 
 
@@ -97,7 +98,7 @@ Let's focus on correlating the upper cores to the composite section, starting wi
 
 <img width="1857" height="1012" alt="image" src="https://github.com/user-attachments/assets/3000aa3e-300c-4eff-b445-8a0ab3ab423a" />
 
-Now, let's add tiepoints for our off-splice cores. You can do this by left clicking the feature on the off-splice core that you want to align to the composite, and then right clicking on the point on the composite where you want to tie in the off-splice core. If you keep the "Auto-Realign" button selected, the algorithm will calculate the stretching and squeezing required to align the rest of the core to the composite and will update the plot to show what was done.
+Now, let's add tiepoints for our off-splice cores. You can do this by left clicking the feature on the off-splice core that you want to align to the composite, and then right clicking on the point on the composite where you want to tie in the off-splice core. If you keep the "Auto-Realign" button selected, the algorithm will calculate the stretching and squeecing required to align the rest of the core to the composite (it will not update the plot to show this for the sake of efficiency).
 
 Another useful tool for you is the "Manual Nudge." Let's say that you change your mind about the alignment of an off-splice core that you tied in. You can update the alignment by left clicking on the composite, right clicking on the off splice core, and then clicking the "Manual Nudge" button. This will shift the entire core to that position on the composite section.
 
