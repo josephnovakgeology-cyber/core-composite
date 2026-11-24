@@ -249,6 +249,10 @@ This information is stored in the "hole objects" (hole_A, hole_B, etc.) that nee
 **builder.add_hole(hole_A)**
 **builder.add_hole(hole_B)**
 
+Optionally, we can also incorporate core photos into the splicing process if color data was extracted from the core photos using CorePhotoDigitizer. This requires the files that end in "_vertical.png" - these are loaded in with the following function:
+
+**batch_load_core_photos(builder)**
+
 SpliceBuilderGUI is ready to run once the hole objects are added to the builder. This is done with the function **SpliceBuilderGUI()** - this function takes three arguments:
 
 **SpliceBuilderGUI(builder, mudline_hole = "887B", proxy = "density")**
