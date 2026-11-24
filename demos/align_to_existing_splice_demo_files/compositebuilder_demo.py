@@ -17,16 +17,16 @@ target_proxies = ['Density', 'Magnetic']
 
 # Load the data
 hole_A = load_from_multiple_files("883A", "883_summary.csv", ["883A_GRAPE_WBD.csv", "883A_magsus.csv"], 
-                                  proxy_keywords=target_proxies)
+                                  proxy_keywords=target_proxies, data_dir = ".", chunk_size = 1.0, depth_scale = "mbsf")
 
 hole_B = load_from_multiple_files("883B", "883_summary.csv", ["883B_GRAPE_WBD.csv", "883B_magsus.csv"], 
-                                  proxy_keywords=target_proxies)
+                                  proxy_keywords=target_proxies, data_dir = ".", chunk_size = 1.0, depth_scale = "mbsf")
 
 hole_C = load_from_multiple_files("883C", "883_summary.csv", ["883C_GRAPE_WBD.csv", "883C_magsus.csv"], 
-                                  proxy_keywords=target_proxies)
+                                  proxy_keywords=target_proxies, data_dir = ".", chunk_size = 1.0, depth_scale = "mbsf")
 
 hole_D = load_from_multiple_files("883D", "883_summary.csv", ["883D_GRAPE_WBD.csv", "883D_magsus.csv"], 
-                                  proxy_keywords=target_proxies)
+                                  proxy_keywords=target_proxies, data_dir = ".", chunk_size = 1.0, depth_scale = "mbsf")
 
 # Add the holes to the builder
 builder.add_hole(hole_A)
@@ -35,10 +35,10 @@ builder.add_hole(hole_C)
 builder.add_hole(hole_D)
 
 # Apply the published splice
-load_external_affine(builder, "Keigwin_splice.csv") #this splice is from Keigwin (1995), doi:10.2973/odp.proc.sr.145.116.1995
+load_external_affine(builder, "Keigwin_splice.csv") #this composite section is from Keigwin (1995), doi:10.2973/odp.proc.sr.145.116.1995
 
 # Run the automated alignment
-builder.optimize_off_splice(proxy='auto', str_range=(0.6, 1.05))
+builder.optimize_off_splice(proxy='auto', str_range=(0.7, 1.2), stretch_penalty = 0.1)
 
 # Review the results
 ReviewGUI(builder, proxy='auto')
