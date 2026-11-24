@@ -317,9 +317,9 @@ There are a substantial number of files because we are working with data from fo
 ### Alignment of off-splice materials to a published composite section / splice
 Like with the other functions in Core Composite, all of the data files should be in the same folder as your script. Download all of the files from Github if you want to follow along with the demo. These instructions will be very similar to those for **SpliceBuilderGUI** because both of these modules use the same data structures. 
 
-To get started, open Anaconda Prompt (PC) or the Terminal (Mac / Linux) and activate your python environment where you installed Core Composite. Mine is called "core_composite" so I use the following command in Anaconda Prompt:
+To get started, open Anaconda Prompt (PC) or the Terminal (Mac / Linux) and activate your python environment where you installed Core Composite. Mine is called "workstation" so I use the following command in Anaconda Prompt:
 
-**conda activate core_composite**
+**conda activate workstation**
 
 Now launch spyder with the following command:
 
@@ -332,7 +332,7 @@ Spyder will open to the last script you were working on. Use the navigation butt
 
 Once you have the demo script open and the working directory set, spyder should look like this:
 
-<img width="1902" height="1125" alt="image" src="https://github.com/user-attachments/assets/9e03204a-5b31-44b2-b469-2d565ce18ace" />
+<img width="1532" height="887" alt="image" src="https://github.com/user-attachments/assets/51b82715-9c9d-4d94-838d-7db0e8c8b65e" />
 
 If you are following the demo, then the file is already set up to run. Let's walk through what each of the lines of code in this script do so that you can modify it later to work on different drill sites. 
 
