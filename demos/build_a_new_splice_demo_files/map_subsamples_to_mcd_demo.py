@@ -17,15 +17,15 @@ target_proxies = ['Density', 'Magnetic', 'L*', 'A*', 'B*']
 
 hole_A = load_from_multiple_files("887A", "887_summary.csv",
                                   ["887A_GRAPE_WBD.csv","887A_magsus.csv", "Site887_Hole_A_Color.csv"], 
-                                  proxy_keywords=target_proxies)
+                                  proxy_keywords=target_proxies, depth_scale ="compressed")
 
 hole_B = load_from_multiple_files("887B", "887_summary.csv",
                                   ["887B_GRAPE_WBD.csv","887B_magsus.csv", "Site887_Hole_B_Color.csv"],
-                                  proxy_keywords=target_proxies)
+                                  proxy_keywords=target_proxies, depth_scale ="compressed")
 
 hole_C = load_from_multiple_files("887C", "887_summary.csv",
                                   ["887C_GRAPE_WBD.csv","887C_magsus.csv", "Site887_Hole_C_Color.csv"],
-                                  proxy_keywords=target_proxies)
+                                  proxy_keywords=target_proxies, depth_scale ="compressed")
 
 builder.add_hole(hole_A)
 builder.add_hole(hole_B)
