@@ -205,9 +205,9 @@ The color data (L\*, a\*, b\*) were extracted from core photos using Core Compos
 ### Building a new splice
 This demo is written assuming that you are using the spyder IDE. Download the demo files from GitHub and place them all into the same project folder.
 
-To get started, open Anaconda Prompt (PC) or the Terminal (Mac / Linux) and activate your python environment where you installed Core Composite. Mine is called "core_composite" so I use the following command in Anaconda Prompt:
+To get started, open Anaconda Prompt (PC) or the Terminal (Mac / Linux) and activate your python environment where you installed Spyder. Mine is called "workstation" so I use the following command in Anaconda Prompt:
 
-**conda activate core_composite**
+**conda activate workstation**
 
 Now launch spyder with the following command:
 
@@ -220,7 +220,7 @@ Spyder will open to the last script you were working on. Use the navigation butt
 
 Once you have the demo script open and the working directory set, spyder should look like this:
 
-<img width="1900" height="1126" alt="image" src="https://github.com/user-attachments/assets/15e3cab4-d68c-4104-90b0-247ae6dab478" />
+<img width="1530" height="907" alt="image" src="https://github.com/user-attachments/assets/58e510fc-4005-4084-95ea-b869d0414011" />
 
 If you are following the demo, then the file is already set up to run. Let's walk through what each of the lines of code in this script do so that you can modify it later to work on different drill sites. 
 
@@ -228,13 +228,21 @@ The imports [lines 8-14] do not need to be changed. Line 12 makes the plots appe
 
 IF you are working with your own dataset, the first thing you may need to change are the types of physical properties data you are working with. Here, physical properties data are called "proxies" because proxies is a shorter word than "physical properties data." The "target_proxies" variable reflects the data types that you want plotted in SpliceBuilderGUI. The string (the text within the quotation marks inside the brackets) needs to match at least part of the column header name in one of your data files. 
 
-You can plot any type of data you would like, although there could be some plotting oddities that arise if you use a data type other than the three in this demo (these are the only types of data I tested). If you find a plotting bug, please leave a comment on the GitHub page or contact me via email (my email as of 7/8/2026 is: joseph_novak@brown.edu; since I am a postdoc, my email address will likely change in the future, so take a look at a recent paper of mine to find my up to date contact). 
+You can plot any type of data you would like, although there could be some plotting oddities that arise if you use a data type other than the three in this demo (these are the only types of data I tested). If you find a plotting bug, please leave a comment on the GitHub page or contact me via email (my email as of 11/23/2026 is: joseph_novak@brown.edu; since I am a postdoc, my email address will likely change in the future, so take a look at a recent paper of mine to find my up to date contact). 
 
-In addition to specifying the target proxies, you need to tell Core Composite which files to look in to find the information for each hole. This is done in lines 19-29 with the function **"load_from_multiple_files()"** - the function takes three arguments:
+In addition to specifying the target proxies, you need to tell Core Composite which files to look in to find the information for each hole. This is done in lines 19-29 with the function **"load_from_multiple_files()"** - the function takes up to six arguments:
 
-**hole_A = load_from_multiple_files("SiteA", "Site_Core_Summary.csv", [SiteA_target_proxy_data_file_1.csv", "SiteA_target_proxy_data_file_2.csv", etc...]**
+**hole_name - the hole these data files belong to**
 
-**hole_B = load_from_multiple_files("SiteB", "Site_Core_Summary.csv", ["SiteB_target_proxy_data_file_1.csv", "SiteB_target_proxy_data_file_2.csv", etc...]**
+**odp_summary_csv - the name of the file that contains the drilling operations summary file**
+
+**hole_data_files - the data files that belong to that hole**
+
+**data_dir - optional, used if the hole data files are in a different folder than the execution script**
+
+**chunk_size - the length of core over which CompositeBuilder aligns off-splice core sections to the main splice. Default value is 1.0 meter**
+
+**depth_scale - the depth scale used for making the splice. This can either be "mbsf" (the standard ODP depth scale) or "compressed," which is a useful alternative for drill sites with substantial core expansion. Here, we use compressed since that is more appropriate for ODP 887.**
 
 This information is stored in the "hole objects" (hole_A, hole_B, etc.) that need to be added to the builder prior to initializing the SpliceBuilderGUI. This is done in lines 31-33 in the demo with the following commands:
 
