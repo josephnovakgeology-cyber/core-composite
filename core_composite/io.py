@@ -818,6 +818,20 @@ def export_project_data(builder, active_holes, all_proxies):
     print("Export Complete. Check your directory.")
     
 def load_core_photo(core, data_dir):
+    """
+    Loads a single vertical core photo for SpliceBuilderGUI or ReviewGUI.
+
+    Parameters
+    ----------
+    core : TYPE
+        The identifying information for the core, e.g.: 798A_1H
+    data_dir : TYPE
+        The data directory the image is stored within.
+
+    Returns
+    -------
+    None
+    """
     if not data_dir:
         core.photo_array = None
         return
@@ -858,6 +872,46 @@ def load_core_photo(core, data_dir):
     else:
         print(f"DEBUG: No exact photo match found for {target_id}")
         core.photo_array = None
+        
+        
+def batch_load_core_photos(target, data_dir=None):
+    """
+    Runs load_core_photo across all cores in a builder, Hole, or list of Holes/Cores
+    using images in data_dir (defaults to the current working directory).
+    Parameters
+    ----------
+    target : TYPE
+        The builder, hole, or list of holes/cores.
+    data_dir : TYPE, optional
+        The directory the images are stored within. The default is None, which is the current working directory.
+
+    """
+    if data_dir is None:
+        data_dir = os.getcwd()
+
+    # Collect all Core objects depending on what was passed in
+    if hasattr(target, 'holes'):  # CompositeBuilder
+        cores = [core for hole in target.holes.values() for core in hole.cores]
+    elif hasattr(target, 'cores'):  # Single Hole
+        cores = target.cores
+    elif isinstance(target, (list, tuple)):
+        cores = []
+        for item in target:
+            if hasattr(item, 'cores'):
+                cores.extend(item.cores)
+            else:
+                cores.append(item)
+    else:
+        raise TypeError("target must be a CompositeBuilder, a Hole, or a list of Holes/Cores.")
+
+    loaded_count = 0
+    for core in cores:
+        load_core_photo(core, data_dir)
+        if getattr(core, 'photo_array', None) is not None:
+            loaded_count += 1
+
+    print(f"Batch photo load complete: matched {loaded_count} / {len(cores)} cores from '{data_dir}'.")
+    return loaded_count
         
 def export_composite_photo(builder, filename="Composite_Photo.pdf"):
     print("Generating composite PDF from external affine table...")
