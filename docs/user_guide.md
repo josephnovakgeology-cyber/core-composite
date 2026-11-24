@@ -220,7 +220,7 @@ Spyder will open to the last script you were working on. Use the navigation butt
 
 Once you have the demo script open and the working directory set, spyder should look like this:
 
-<img width="1530" height="907" alt="image" src="https://github.com/user-attachments/assets/58e510fc-4005-4084-95ea-b869d0414011" />
+<img width="1532" height="911" alt="image" src="https://github.com/user-attachments/assets/2b2f060e-6a14-4358-a46b-c71a44157411" />
 
 If you are following the demo, then the file is already set up to run. Let's walk through what each of the lines of code in this script do so that you can modify it later to work on different drill sites. 
 
@@ -261,27 +261,30 @@ These arguments specify: 1) the name of your builder object, 2) the mudline hole
 
 If you are following along with the demo script, go ahead and press the small green arrow at the top of the spyder tool ribbon. This will run the code and open the SpliceBuilderGUI. The popup containing the GUI will look like this:
 
-<img width="1876" height="1052" alt="image" src="https://github.com/user-attachments/assets/b17d88f0-8af8-4152-bac1-0e23adf1ee0d" />
+<img width="1501" height="830" alt="image" src="https://github.com/user-attachments/assets/6f9e3fc0-f970-431f-9b90-3e4d10a6b938" />
 
 You can press the different bottons on the left side of the plot to cycle between different data types and different boreholes. The data plotted at the top of the plot in black is the composite section / splice that you are building. The "mudline_hole" argument from before determines which core is plotted as a starting point for the correlation. 
 
-The data on the bottom of the plot is from the borehole that is currently selected with the buttons on the right. For longer sequences, it can be useful to zoom in on the region where you are currently working, which you can do using the text boxes on the bottom of the plot. "Undo" removes your last tiepoint, and "Finalize" closes the GUI and builds an affine table. 
+The data on the bottom of the plot is from the borehole that is currently selected with the buttons on the right. For longer sequences, it can be useful to zoom in on the region where you are currently working, which you can do using the text boxes on the bottom of the plot. "Undo" removes your last tiepoint, and "Finalize" closes the GUI and builds an affine table. If you loaded in the core photos earlier, you can toggle the "Show Photos" button to display the cropped core photos, scaled to whichever depth scale the builder object is using:
 
-For this demo, I will primarily use the b* data to build the splice since there are pronounced and repeated variations in those data between each of the boreholes. I am going to draw my first tiepoint between 887B 1H (our mudline core) and 887C 1H. To do this, I first left click on the composite at the place where I want to tie in 887C 1H:
+<img width="1482" height="825" alt="image" src="https://github.com/user-attachments/assets/f277f7c2-993d-48db-9b2d-3be0a8a5871e" />
 
-<img width="1830" height="1007" alt="image" src="https://github.com/user-attachments/assets/66ce9cb4-980f-4068-9ff3-de114b1b6157" />
 
-The black dashed line shows where the tiepoint is attached to the composite section / splice. Next, right click on the depth interval of 887C 1H you want to tie into the composite section / splice. In my case, I clicked at about 1 meter, so the result looks like this:
+For this demo, I will primarily use the b* and GRAPE WBD data to build the splice since there are pronounced and repeated variations in those data between each of the boreholes. I am going to draw my first tiepoint between 887B 1H (our mudline core) and 887C 1H. To do this, I first left click on the composite at the place where I want to tie in 887C 1H:
 
-<img width="1846" height="1050" alt="image" src="https://github.com/user-attachments/assets/e7442287-4aad-461c-b163-021ed60861b7" />
+<img width="1496" height="812" alt="image" src="https://github.com/user-attachments/assets/28a2f562-79ae-43fa-b1d9-6be0ed963f43" />
+
+The black dashed line shows where the tiepoint is attached to the composite section / splice. Next, right click on the depth interval of 887C 1H you want to tie into the composite section / splice. In my case, I clicked at about 1.25 meters, so the result looks like this:
+
+<img width="1502" height="812" alt="image" src="https://github.com/user-attachments/assets/3ff11ce9-c541-442e-9a2d-516f452c88a5" />
 
 Continue toggling between holes and adding successively deeper cores to build your composite section / splice. Here is what mine looks like:
 
-<img width="1862" height="1036" alt="image" src="https://github.com/user-attachments/assets/fae49060-358c-46d3-9b25-84ff96f5ffae" />
+<img width="1470" height="802" alt="image" src="https://github.com/user-attachments/assets/7719aaa4-6b18-4e56-9fdb-85d938a3470f" />
 
-When you are finished, hit the "Finalize" button. This will pass your affine shifts to Core Composite, which will automatically assign all of the data in the builder object to the composite depth scale, include the automated alignment of off-splice materials to the main composite section / splice. We can then review our results in the "ReviewGUI".
+When you are finished, hit the "Finalize" button. This will pass your affine shifts to Core Composite, which will automatically assign all of the data in the builder object to the composite depth scale and will export the composite core photo, which will appear in a new popup. We can then close the SpliceBuilderGUI popups and review our results in the "ReviewGUI".
 
-<img width="1841" height="1040" alt="image" src="https://github.com/user-attachments/assets/3d460a4e-30ce-4c63-b538-8fbeb2ed598d" />
+<img width="1492" height="816" alt="image" src="https://github.com/user-attachments/assets/dcdb9941-345d-4b87-899a-7f45c433cad8" />
 
 Here, the composite section is plotted at the bottom. The data above it are from each of the parallel boreholes. The blue data are the values that compose the composite section / splice, and the red data are the off-splice data. The program attempts to align the off-splice data with the composite, which you can verify in this GUI. If you are satisified with the alignment, hit "Export and Save." 
 
